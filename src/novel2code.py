@@ -664,7 +664,7 @@ class VolumeWriter:
 # 七、核心转换器
 # ============================================================
 
-CHAPTER_RE = re.compile(r"^第[零一二三四五六七八九十百千\d]+[章节卷回]")
+CHAPTER_RE = re.compile(r"^第[零一二两三四五六七八九十百千\d]+[章节卷回]")
 
 
 class Novel2Code:
@@ -848,8 +848,14 @@ class Novel2Code:
 
             # 完成
             elapsed = time.time() - t0
-            print(f"\r[进度] [####################] 100% | {total_to_process}/{total_to_process} | "
+            print(f"\r[进度] [####################] 100% | {processed}/{total_to_process} | "
                   f"耗时 {elapsed:.1f}s                     ")
+
+            # 诊断：检查是否有遗漏行
+            if processed < total_to_process:
+                missing = total_to_process - processed
+                print(f"[警告] 有 {missing} 行未被处理！可能源文件有编码损坏或章节格式异常。")
+                print(f"       请检查原文第 {effective_skip + processed} 行附近是否有乱码。")
 
         # 嵌入状态到输出文件末尾（先set_state再close）
         vw.set_state(self._build_state(total_lines, vw.total_volumes, input_path))
