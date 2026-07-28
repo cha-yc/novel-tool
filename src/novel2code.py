@@ -1023,24 +1023,43 @@ class Novel2Code:
             except StopIteration:
                 return None
 
+        # 先写一行小说文本（仿原始exe：package之前就有小说注释）
+        first_cmt = next_cmt()
+        if first_cmt:
+            vw.write(first_cmt)
+
         # Header (package/imports for Java-like; module doc for Python-like)
         for h in lang["header"](self.cfg):
             vw.write(h)
 
-        # Imports interspersed with novel comments
+        # Imports interspersed with novel comments (70%密度)
         for imp in lang.get("imports", []):
-            if self.rng.random() < 0.4:
+            if self.rng.random() < 0.7:
                 cmt = next_cmt()
                 if cmt:
                     vw.write(cmt)
             vw.write(f"import {imp};\n")
 
-        # Remaining preamble as comments
+        # 收集剩余preamble行（分给imports后、成员变量间、static块）
+        remaining = []
         while True:
             cmt = next_cmt()
             if cmt is None:
                 break
-            vw.write(cmt)
+            remaining.append(cmt)
+        ri = iter(remaining)
+
+        def pop_cmt():
+            try:
+                return next(ri)
+            except StopIteration:
+                return None
+
+        # 写一些在imports之后
+        for _ in range(min(3, len(remaining))):
+            cmt = pop_cmt()
+            if cmt:
+                vw.write(cmt)
         vw.write("\n")
 
         # Class declaration
@@ -1053,14 +1072,19 @@ class Novel2Code:
         else:
             vw.write(lang["logger"])
 
-        # Member variables (类型-初值成对，避免Java编译错误)
+        # Member variables (类型-初值成对，穿插小说注释)
         var_pairs = lang.get("var_pairs", list(zip(lang["var_types"], lang["var_inits"])))
         num_vars = min(self.rng.randint(7, 14), len(var_pairs))
         used = set()
         count = 0
-        for _ in range(num_vars * 2):  # 多试几次确保填满
+        for _ in range(num_vars * 2):
             if count >= num_vars:
                 break
+            # 每2个变量穿插一条注释
+            if count > 0 and count % 2 == 0:
+                cmt = pop_cmt()
+                if cmt:
+                    vw.write(cmt)
             vt, vi = self.rng.choice(var_pairs)
             n = self.gen.v()
             if n in used:
@@ -1076,15 +1100,21 @@ class Novel2Code:
             vw.write(lang["static_const"](name, val))
         vw.write("\n")
 
-        # Static block / constructor
+        # Static block / constructor (穿插小说注释)
         sbs = lang["static_block_start"]
         if callable(sbs):
             sbs = sbs(self.cfg)
         elif "{class_name}" in sbs:
             sbs = sbs.format(class_name=class_name)
         vw.write(sbs)
+        cmt = pop_cmt()
+        if cmt:
+            vw.write(cmt)
         for _ in range(self.rng.randint(2, 4)):
             vw.write(f"        {self.gen.v()}_ = {self.gen.v()}_\n")
+        cmt = pop_cmt()
+        if cmt:
+            vw.write(cmt)
         vw.write(lang["static_block_end"])
 
     def _write_method(self, vw: VolumeWriter, title: str, lines: list[str]):
