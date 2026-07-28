@@ -790,6 +790,8 @@ class Novel2Code:
 
         # 构建分段（仅新增部分）
         segments = self._build_segments(total_lines, chapter_lines, skip_before=start_line)
+        if segments:
+            print(f"[分段] {len(segments)} 段, 覆盖 ({segments[0][0]}, {segments[-1][1]})")
 
         # 增量 + 不分卷：追加到现有文件，不需要 preamble
         # 全量 / 分卷：创建新文件
@@ -881,12 +883,13 @@ class Novel2Code:
             print(f"\r[进度] [####################] 100% | {processed}/{total_to_process} | "
                   f"耗时 {elapsed:.1f}s                     ")
 
-            # 诊断：检查是否有遗漏行
+            # 诊断
+            print(f"[诊断] 总段数={len(segments)}, 已处理段={seg_idx}, "
+                  f"最后一行={effective_skip + processed}")
             if processed < total_to_process:
                 missing = total_to_process - processed
                 first_miss = effective_skip + processed + 1
                 print(f"[警告] {missing} 行未处理！处理止于第 {first_miss - 1} 行附近。")
-                print(f"       检查原文第 {first_miss} 行内容: 可能有编码损坏或异常字符。")
 
         # 嵌入状态到输出文件末尾（先set_state再close）
         vw.set_state(self._build_state(total_lines, vw.total_volumes, input_path))
