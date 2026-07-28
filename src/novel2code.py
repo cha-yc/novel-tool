@@ -41,6 +41,7 @@ LANG = {
             "java.util.concurrent.atomic.*", "java.util.stream.Collectors",
             "java.io.*", "java.nio.file.*", "java.time.*", "java.math.*",
         ],
+        "class_javadoc": "/**\n * ------------\n */\n\n",
         "class_decl": lambda c, n: f"public class {n} {{\n",
         "logger": '    private static final Logger logger = LoggerFactory.getLogger({class_name}.class);\n\n',
         "member_var": lambda t, n, v: f"    private final {t} {n} = {v};\n",
@@ -73,10 +74,10 @@ LANG = {
             "{0}.put({1}, new StringBuilder().append({2}).toString());",
             "return {0} != null;",
         ],
-        "block_if": 'if ({0} != null && {1}.size() > 0) {{\n{body}}}\n',
-        "block_else": ' else {{\n{body}}}\n',
-        "block_try": 'try {{\n{body}}} catch (Exception {0}) {{\n    logger.error("{msg}", {0});\n}}\n',
-        "block_while": 'while ({0}.hasNext() && {1}.size() < {n}) {{\n{body}}}\n',
+        "block_if": 'if ({0} != null && {1}.size() > 0) {{\n{body}\n        }}\n',
+        "block_else": ' else {{\n{body}\n        }}\n',
+        "block_try": 'try {{\n{body}\n        }} catch (Exception {0}) {{\n            logger.error("{msg}", {0});\n        }}\n',
+        "block_while": 'while ({0}.hasNext() && {1}.size() < {n}) {{\n{body}\n        }}\n',
         "block_switch": 'switch ({0}.hashCode() % 3) {{\n{body}}}\n',
         "block_case": '    case {n}:\n{body}        break;\n',
         "block_default": '    default:\n{body}        break;\n',
@@ -102,6 +103,22 @@ LANG = {
         "log_msgs": ["processing request","checkpoint reached","releasing resource",
                      "validating input","context updated","cache miss","session expired",
                      "connection reset","data flushed","pipeline completed"],
+        "var_pairs": [
+            ("Map<String, Object>", "new HashMap<>()"),
+            ("List<String>", "new ArrayList<>()"),
+            ("Queue<Runnable>", "new LinkedBlockingQueue<>()"),
+            ("AtomicInteger", "new AtomicInteger(0)"),
+            ("Properties", "new Properties()"),
+            ("ExecutorService", "Executors.newFixedThreadPool(4)"),
+            ("ConcurrentHashMap<String, Object>", "new ConcurrentHashMap<>()"),
+            ("AtomicLong", "new AtomicLong(0)"),
+            ("Map<String, Object>", "new TreeMap<>()"),
+            ("Set<String>", "new HashSet<>()"),
+            ("List<Object>", "new CopyOnWriteArrayList<>()"),
+            ("Map<String, Object>", "new LinkedHashMap<>()"),
+            ("List<Object>", "new Vector<>()"),
+            ("Queue<String>", "new ConcurrentLinkedQueue<>()"),
+        ],
     },
 
     "python": {
@@ -118,6 +135,7 @@ LANG = {
             "import json\nimport hashlib\nimport time\n\n",
         ],
         "imports": [],  # Python uses header imports
+        "class_javadoc": "# ------------\n\n",
         "class_decl": lambda c, n: f"class {n}:\n",
         "logger": '    _logger = logging.getLogger(__name__)\n\n',
         "member_var": lambda t, n, v: f"    {n}: {t} = {v}\n",
@@ -186,6 +204,7 @@ LANG = {
             'using namespace std;\n\n',
         ],
         "imports": [],
+        "class_javadoc": "// ------------\n\n",
         "class_decl": lambda c, n: f"class {n} {{\npublic:\n",
         "logger": '    // Logger would be injected here\n\n',
         "member_var": lambda t, n, v: f"    {t} {n}{{{v}}};\n",
@@ -242,6 +261,7 @@ LANG = {
             "const { v4: uuidv4 } = require('uuid');\n\n",
         ],
         "imports": [],
+        "class_javadoc": "// ------------\n\n",
         "class_decl": lambda c, n: f"class {n} {{\n",
         "logger": "    static #logger = console;\n\n",
         "member_var": lambda t, n, v: f"    #{n} = {v};\n",
@@ -297,6 +317,7 @@ LANG = {
             'import (\n\t"context"\n\t"errors"\n\t"fmt"\n\t"sync"\n\t"time"\n)\n\n',
         ],
         "imports": [],
+        "class_javadoc": "// ------------\n\n",
         "class_decl": lambda c, n: f"type {n} struct {{\n",
         "logger": "\t// logger would be injected\n\n",
         "member_var": lambda t, n, v: f"\t{n} {t}\n",
@@ -488,26 +509,26 @@ class CodeGen:
         lines = []
 
         if kind == 0 and self.lang.get("block_if"):
-            inner = self._indent(self.stmt(""), "    ")
+            inner = self._indent(self.stmt(""), "        ")
             for _ in range(self.rng.randint(1, 2)):
-                inner += self._indent(self.stmt(""), "    ")
+                inner += self._indent(self.stmt(""), "        ")
             tmpl = self.lang["block_if"]
             body = tmpl.format(self.v(), self.v(), body=inner)
             lines.append(indent + body.rstrip("\n"))
             if self.rng.random() < 0.4 and self.lang.get("block_else"):
-                inner2 = self._indent(self.stmt(""), "    ")
+                inner2 = self._indent(self.stmt(""), "        ")
                 tmpl2 = self.lang["block_else"]
                 body2 = tmpl2.format(self.v(), self.v(), body=inner2)
                 lines.append(indent + body2.rstrip("\n"))
 
         elif kind == 1 and self.lang.get("block_try"):
-            inner = self._indent(self.stmt(""), "    ")
+            inner = self._indent(self.stmt(""), "        ")
             tmpl = self.lang["block_try"]
             body = tmpl.format(self.v(), msg=self.log(), body=inner)
             lines.append(indent + body.rstrip("\n"))
 
         elif kind == 2 and self.lang.get("block_while"):
-            inner = self._indent(self.stmt(""), "    ")
+            inner = self._indent(self.stmt(""), "        ")
             tmpl = self.lang["block_while"]
             body = tmpl.format(self.v(), self.v(), n=self.rng.randint(5, 30), body=inner)
             lines.append(indent + body.rstrip("\n"))
@@ -515,7 +536,7 @@ class CodeGen:
         elif kind == 3 and self.lang.get("block_switch"):
             inner = ""
             for c in range(3):
-                case_inner = self._indent(self.stmt(""), "    ")
+                case_inner = self._indent(self.stmt(""), "        ")
                 if c < 2 and self.lang.get("block_case"):
                     inner += self.lang["block_case"].format(n=c, body=case_inner)
                 elif self.lang.get("block_default"):
@@ -1023,7 +1044,8 @@ class Novel2Code:
         vw.write("\n")
 
         # Class declaration
-        vw.write(lang["method_javadoc"]("------------"))
+        cj = lang.get("class_javadoc", lang["method_javadoc"]("------------").lstrip())
+        vw.write(cj)
         vw.write(lang["class_decl"](self.cfg, self.cfg._class_name()))
         class_name = self.cfg._class_name()
         if "{class_name}" in lang["logger"]:
@@ -1031,16 +1053,20 @@ class Novel2Code:
         else:
             vw.write(lang["logger"])
 
-        # Member variables
-        num_vars = self.rng.randint(7, 14)
+        # Member variables (类型-初值成对，避免Java编译错误)
+        var_pairs = lang.get("var_pairs", list(zip(lang["var_types"], lang["var_inits"])))
+        num_vars = min(self.rng.randint(7, 14), len(var_pairs))
         used = set()
         count = 0
-        for _ in range(num_vars):
+        for _ in range(num_vars * 2):  # 多试几次确保填满
+            if count >= num_vars:
+                break
+            vt, vi = self.rng.choice(var_pairs)
             n = self.gen.v()
             if n in used:
                 continue
             used.add(n)
-            vw.write(lang["member_var"](self.gen.vt(), n, self.gen.vi()))
+            vw.write(lang["member_var"](vt, n, vi))
             count += 1
         vw.write("\n")
 
