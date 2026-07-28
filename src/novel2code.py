@@ -824,7 +824,10 @@ class Novel2Code:
                 # 段边界检测
                 while seg_idx < len(segments) and line_no >= segments[seg_idx][1]:
                     if method_lines:
-                        self._write_method(vw, method_title, method_lines)
+                        try:
+                            self._write_method(vw, method_title, method_lines)
+                        except Exception as e:
+                            print(f"\n[跳过] 第{seg_idx}段写入失败: {e}")
                         method_lines = []
                     seg_idx += 1
 
@@ -834,7 +837,10 @@ class Novel2Code:
                 seg_start, seg_end, seg_title = segments[seg_idx]
                 if line_no < seg_start:
                     if method_lines:
-                        self._write_method(vw, method_title, method_lines)
+                        try:
+                            self._write_method(vw, method_title, method_lines)
+                        except Exception as e:
+                            print(f"\n[跳过] 第{seg_idx}段写入失败: {e}")
                         method_lines = []
                     continue
 
@@ -844,7 +850,10 @@ class Novel2Code:
 
             # 最后一个段
             if method_lines and seg_idx < len(segments):
-                self._write_method(vw, method_title, method_lines)
+                try:
+                    self._write_method(vw, method_title, method_lines)
+                except Exception as e:
+                    print(f"\n[跳过] 末段写入失败: {e}")
 
             # 完成
             elapsed = time.time() - t0
@@ -854,8 +863,9 @@ class Novel2Code:
             # 诊断：检查是否有遗漏行
             if processed < total_to_process:
                 missing = total_to_process - processed
-                print(f"[警告] 有 {missing} 行未被处理！可能源文件有编码损坏或章节格式异常。")
-                print(f"       请检查原文第 {effective_skip + processed} 行附近是否有乱码。")
+                first_miss = effective_skip + processed + 1
+                print(f"[警告] {missing} 行未处理！处理止于第 {first_miss - 1} 行附近。")
+                print(f"       检查原文第 {first_miss} 行内容: 可能有编码损坏或异常字符。")
 
         # 嵌入状态到输出文件末尾（先set_state再close）
         vw.set_state(self._build_state(total_lines, vw.total_volumes, input_path))
