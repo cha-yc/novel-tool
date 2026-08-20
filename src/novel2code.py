@@ -3,7 +3,7 @@
 novel2code v2.0 — 小说文本 ↔ 源码 双向转换工具
 ================================================
 功能: 将 .txt 小说伪装成多种语言源码 | 支持批量、多卷、评论模式、逆转换
-
+注意：Alt+z 开启编辑器换行
 用法:
   python novel2code.py novel.txt                    一键转换(Java)
   python novel2code.py novel.txt -l python          转为Python
@@ -395,6 +395,7 @@ DEFAULT_CONFIG = {
     "detect_chapters": True,
     "seed": None,
     "preamble_lines": 20,
+    "wrap": 0,               # 注释行长宽度换行，0=不换行
     "package_name": "com.acme.core",
     "class_name": "All",
 }
@@ -554,30 +555,62 @@ class CodeGen:
     def _indent(self, text: str, prefix: str) -> str:
         return "\n".join(prefix + l for l in text.split("\n") if l)
 
-    def make_comment(self, text: str, indent="        ") -> str:
-        """根据评论模式生成注释行"""
-        prefix = self.lang["cmt"]
+    def _wrap_text(self, text: str, width: int) -> list[str]:
+        """按宽度拆行长文本，返回分片列表"""
+        text = text.strip()
+        if width <= 0 or len(text) <= width:
+            return [text]
+        chunks = []
+        while len(text) > width:
+            # 尽量在标点处断开，否则按宽度硬切
+            cut = text.rfind(("，。！？；：、,.!?;:"), 0, width)
+            if cut < width // 2:
+                cut = width
+            chunks.append(text[:cut])
+            text = text[cut:].lstrip()
+        if text:
+            chunks.append(text)
+        return chunks
 
-        if self.cfg.cmt_mode == "review" and text.strip():
+    def make_comment(self, text: str, indent="        ") -> str:
+        """根据评论模式生成注释行，支持长行自动换行"""
+        prefix = self.lang["cmt"]
+        width = self.cfg.data.get("wrap", 0)
+        if not text.strip():
+            return ""
+
+        chunks = self._wrap_text(text, width)
+        if not chunks:
+            return ""
+
+        if self.cfg.cmt_mode == "review":
             style = self.cfg.data.get("review_style", "mixed")
-            if style == "cn":
-                pool = REVIEW_PREFIXES_CN
-            elif style == "en":
-                pool = REVIEW_PREFIXES
-            else:
-                pool = REVIEW_PREFIXES + REVIEW_PREFIXES_CN
+            pool = REVIEW_PREFIXES if style == "en" else (
+                REVIEW_PREFIXES_CN if style == "cn" else REVIEW_PREFIXES + REVIEW_PREFIXES_CN)
             tag = self.rng.choice(pool)
-            return f"{indent}{prefix} {tag}{text}\n"
+            return f"{indent}{prefix} {tag}{chunks[0]}\n" + "".join(
+                f"{indent}{prefix}↪ {c}\n" for c in chunks[1:])
         else:
-            return f"{indent}{prefix} {text}\n" if text.strip() else ""
+            return f"{indent}{prefix} {chunks[0]}\n" + "".join(
+                f"{indent}{prefix}↪ {c}\n" for c in chunks[1:])
 
     def make_preamble_comment(self, text: str) -> str:
-        """生成preamble中的注释（行首无缩进）"""
-        if self.cfg.cmt_mode == "review" and text.strip():
+        """生成preamble中的注释（行首无缩进），支持长行自动换行"""
+        width = self.cfg.data.get("wrap", 0)
+        if not text.strip():
+            return ""
+
+        chunks = self._wrap_text(text, width)
+        if not chunks:
+            return ""
+
+        if self.cfg.cmt_mode == "review" and chunks:
             tag = self.rng.choice(REVIEW_PREFIXES)
-            return f"{self.lang['cmt']} {tag}{text}\n"
+            return f"{self.lang['cmt']} {tag}{chunks[0]}\n" + "".join(
+                f"{self.lang['cmt']}↪ {c}\n" for c in chunks[1:])
         else:
-            return f"{self.lang['cmt']} {text}\n" if text.strip() else ""
+            return f"{self.lang['cmt']} {chunks[0]}\n" + "".join(
+                f"{self.lang['cmt']}↪ {c}\n" for c in chunks[1:])
 
 
 # ============================================================
@@ -961,6 +994,7 @@ class Novel2Code:
                 break
 
         lines_out = 0
+        prev_content = None  # 保存上一行，用于合并↪续行
         with open(input_path, "r", encoding="utf-8", errors="replace") as fin, \
              open(output_path, "w", encoding="utf-8") as fout:
 
@@ -972,6 +1006,11 @@ class Novel2Code:
                 # 匹配注释行（可能是 review 模式带前缀的）
                 if stripped.startswith(cmt_prefix):
                     content = stripped[len(cmt_prefix):].strip()
+                    # ↪续行标记：拼接到上一行
+                    if content.startswith("↪"):
+                        if prev_content is not None:
+                            prev_content += content[1:].strip()
+                        continue
                     # 去掉 review 前缀
                     for prefixes in [REVIEW_PREFIXES, REVIEW_PREFIXES_CN]:
                         for prefix in prefixes:
@@ -979,8 +1018,16 @@ class Novel2Code:
                                 content = content[len(prefix):]
                                 break
                     if content and not content.startswith("*") and not content.startswith("/"):
-                        fout.write(content + "\n")
-                        lines_out += 1
+                        # 提交上一行
+                        if prev_content is not None:
+                            fout.write(prev_content + "\n")
+                            lines_out += 1
+                        prev_content = content
+
+            # 最后一行
+            if prev_content is not None:
+                fout.write(prev_content + "\n")
+                lines_out += 1
 
         print(f"[逆转换] {input_path} → {output_path}")
         print(f"[完成] 提取 {lines_out} 行文本")
@@ -1305,6 +1352,8 @@ def main():
     parser.add_argument("--vol-lines", type=int, default=10000,
                         help="每卷输入行数 (默认: 10000)")
     parser.add_argument("--chunk", type=int, default=50, help="分块大小")
+    parser.add_argument("--wrap", type=int, default=None,
+                        help="注释行宽(字符)，超长自动换行，如--wrap 80 (默认:不换行)")
     parser.add_argument("--seed", type=int, default=None, help="随机种子")
     parser.add_argument("--no-chapter", action="store_true", help="不检测章节")
     parser.add_argument("-b", "--batch", action="store_true", help="批量模式")
@@ -1343,6 +1392,7 @@ def main():
         "split_volumes": args.split,
         "volume_lines": args.vol_lines,
         "chunk_size": args.chunk,
+        "wrap": args.wrap,
         "seed": args.seed,
         "detect_chapters": not args.no_chapter,
     })
