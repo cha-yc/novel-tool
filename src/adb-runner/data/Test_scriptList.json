@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "scripts": [
+    {
+      "name": "adb root",
+      "command": "adb root",
+      "category": "",
+      "description": "",
+      "id": 1,
+      "order": 0
+    }
+  ]
+}
