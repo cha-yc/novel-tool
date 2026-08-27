@@ -61,9 +61,16 @@ novel-tool/
 
 > 注意：不要直接双击 `main.py`——系统 Python 没装 PySide6，会启动失败。
 
-### 打包成 exe
+### 打包成 exe（两种模式）
 
-双击 `src/adb-runner/打包exe.bat` 即可自动安装 PyInstaller 并打包，产物在 `src/adb-runner/dist/ADB脚本工具.exe`，脚本数据自动复制到 exe 同目录 `data\`。
+```bash
+# 1. 单文件版（便携，启动慢 2-3 秒）—— 双击 打包exe.bat
+#    产物: src/adb-runner/dist/ADB脚本工具.exe
+# 2. 秒开版（文件夹，启动快）—— 双击 打包秒开版.bat
+#    产物: src/adb-runner/dist/ADB脚本工具\ 里的 exe
+```
+
+两个脚本都会自动关闭正在运行的工具、复制数据到 exe 同目录。bat 为纯 ASCII + CRLF，中文环境无编码问题；exe 图标来自 `icon.ico`（白云）。
 
 > exe 约 36MB，几乎全部来自 PySide6 的 Qt 运行库和 Python 解释器（本工具自己的代码 + 数据不足 200KB）。已卸载 PySide6-Addons 只保留 Essentials 精简过体积。
 

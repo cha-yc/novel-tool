@@ -18,20 +18,20 @@
       "description": ""
     },
     {
-      "id": 18,
       "name": "杀行车app进程",
       "command": "adb shell killall com.bitech.pilotparking",
-      "order": 2,
       "category": "",
-      "description": ""
+      "description": "",
+      "id": 18,
+      "order": 2
     },
     {
-      "id": 3,
       "name": "拉起APA界面",
       "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0",
-      "order": 3,
       "category": "",
-      "description": ""
+      "description": "",
+      "id": 3,
+      "order": 3
     },
     {
       "id": 25,

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "current_set": "J6B",
+  "current_set": "test1",
   "sets": [
     {
       "name": "J6B",
@@ -16,11 +16,16 @@
       "name": "test1",
       "order": 2,
       "file": "test1_scriptList.json"
+    },
+    {
+      "name": "1",
+      "order": 3,
+      "file": "1_scriptList.json"
     }
   ],
   "settings": {
     "multi_device": true,
-    "last_device": "192.168.134.7:40121",
+    "last_device": "192.168.134.7:36021",
     "log_mode": "error_only",
     "log_keep_days": 8,
     "log_max_mb": 10,

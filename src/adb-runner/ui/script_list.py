@@ -153,6 +153,12 @@ class ScriptItemWidget(QWidget):
                 w.setVisible(True)
             self.setStyleSheet("")
 
+    def reset_press(self):
+        """复位按压/长按状态：双击打开弹窗、取消弹窗后调用，避免误触发拖拽。"""
+        self._press_timer.stop()
+        self._pressed = False
+        self._dragging = False
+
     # ---------- 鼠标：点击 / 长按拖拽 ----------
 
     def mousePressEvent(self, e):
@@ -177,14 +183,12 @@ class ScriptItemWidget(QWidget):
         super().mouseReleaseEvent(e)
 
     def mouseDoubleClickEvent(self, e):
-        # 双击会打开编辑对话框（模态），必须先取消拖拽，否则释放事件被对话框吃掉导致拖拽卡死
-        self._press_timer.stop()
-        if self._dragging:
-            self._dragging = False
-            self.drag_release.emit()
+        # 双击会打开编辑对话框（模态），必须先取消拖拽并复位按压，
+        # 否则释放事件被对话框吃掉、残留按压状态在取消后误触发拖拽。
+        # 注意：不再调用 super()——基类默认实现会重新触发按压/长按计时器。
+        self.reset_press()
         if e.button() == Qt.LeftButton:
             self.row_double_clicked.emit()
-        super().mouseDoubleClickEvent(e)
 
     def contextMenuEvent(self, e):
         self.context_requested.emit(e.globalPos())
@@ -414,12 +418,16 @@ class ScriptList(QListWidget):
         self._reset_drag()
 
     def cancel_drag(self):
-        """取消进行中的拖拽（打开对话框/窗口失焦时），避免状态卡死。"""
+        """取消进行中的拖拽（打开对话框/窗口失焦时），并复位所有行的按压状态。"""
         self._scroll_timer.stop()
         if self._dragging:
             w = self.itemWidget(self.item(self._drag_orig))
             if w is not None:
                 w.set_placeholder(False)
+        for j in range(self.count()):
+            w = self.itemWidget(self.item(j))
+            if w is not None:
+                w.reset_press()
         self._reset_drag()
 
     def _reset_drag(self):

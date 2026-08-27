@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, Qt, QThread, Signal
+from PySide6.QtCore import QEvent, Qt, QThread, QTimer, Signal
 from PySide6.QtWidgets import (
     QApplication, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMenu,
     QMessageBox, QPushButton, QToolButton, QVBoxLayout, QWidget,
@@ -169,7 +169,8 @@ class MainWindow(QMainWindow):
 
         # ---------- 数据 ----------
         self._rebuild_groups()
-        self._refresh_devices()
+        # 设备刷新延后到窗口显示后再启动（避免显示瞬间后台线程/更新造成二次闪烁）
+        QTimer.singleShot(0, self._refresh_devices)
 
     def event(self, e):
         """窗口失焦时取消拖拽，避免对话框/切窗口后拖拽状态卡死。"""
@@ -399,6 +400,9 @@ class MainWindow(QMainWindow):
         self._output.switch_to(serial)
 
     def _refresh_devices(self):
+        old = getattr(self, "_device_thread", None)
+        if old is not None and old.isRunning():
+            return  # 上次刷新还在进行：忽略重复点击，避免线程被覆盖销毁而崩溃
         self._device_thread = DeviceRefreshThread(self._adb)
         self._device_thread.devices_ready.connect(self._on_devices_ready)
         self._device_thread.start()
@@ -452,3 +456,11 @@ class MainWindow(QMainWindow):
         else:
             self._output.append(
                 self._run_serial, f"  ✓ 成功 · 退出码 {code}", "#34C759")
+
+    def closeEvent(self, e):
+        """干净退出：短等待后台线程结束；停不下的（如 adb 无响应）交给 main 兜底强制退出。"""
+        for t in (getattr(self, "_device_thread", None),
+                  getattr(self, "_exec_thread", None)):
+            if t is not None and t.isRunning():
+                t.wait(1500)
+        super().closeEvent(e)

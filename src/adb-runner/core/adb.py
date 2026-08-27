@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 """AdbService — 设备枚举、命令 -s 替换与执行（纯逻辑，Qt 无关，便于测试）。"""
 
+import os
 import re
 import shutil
 import subprocess
+
+# GUI 程序拉起控制台子进程（adb/cmd）时，禁止 Windows 为子进程创建控制台窗口（避免闪烁终端）
+_CREATE_NO_WINDOW = 0x08000000 if os.name == "nt" else 0
 
 # 匹配独立的 "adb" 令牌；若其后已跟 "-s"（已是 adb -s ... 形式）则不替换
 _ADB_RE = re.compile(r"(?<![\w.])adb(?![\w-])(?!\s+-s\b)")
@@ -29,6 +33,7 @@ class AdbService:
             out = subprocess.run(
                 [self._adb, "devices", "-l"],
                 capture_output=True, text=True, timeout=5,
+                creationflags=_CREATE_NO_WINDOW,
             ).stdout
         except (OSError, subprocess.TimeoutExpired):
             return []
@@ -63,6 +68,7 @@ class AdbService:
                 cmd, shell=True, text=True,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 encoding="utf-8", errors="replace",
+                creationflags=_CREATE_NO_WINDOW,
             )
         except OSError as e:
             if output_cb:

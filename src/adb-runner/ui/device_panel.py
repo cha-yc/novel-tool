@@ -43,7 +43,9 @@ class DevicePanel(QWidget):
         lay.addWidget(self.combo, 1)
         lay.addWidget(self.refresh_btn)
 
-        self.set_devices(self._adb.list_devices(), last_serial)
+        # 不在构造时同步执行 adb devices（可能阻塞 1-2 秒，拖慢启动）。
+        # 先占位"未连接设备"，由主窗口的异步刷新线程在窗口显示后填充。
+        self.set_devices([], last_serial)
 
     def set_devices(self, devices, last_serial=""):
         prev = self.current_serial()

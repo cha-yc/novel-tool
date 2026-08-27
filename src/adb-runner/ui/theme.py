@@ -95,6 +95,12 @@ QPushButton#pillAdd {
     padding: 7px 14px; color: #9AA0A6; font-size: 15px; font-weight: 600;
 }
 QPushButton#pillAdd:hover { color: #ECECEC; border-color: #4F8CFF; }
+QPushButton#pillNav {
+    background: transparent; border: 1px solid #2E2E2E; border-radius: 13px;
+    color: #9AA0A6; font-size: 15px; font-weight: 700;
+}
+QPushButton#pillNav:hover:enabled { color: #ECECEC; border-color: #4F8CFF; }
+QPushButton#pillNav:disabled { color: #4A4A4A; border-color: #2A2A2A; }
 /* 设备胶囊内下拉透明，融入胶囊（统一感） */
 QWidget#deviceCapsule QComboBox {
     background: transparent; border: none; padding: 2px 4px; color: #ECECEC;
@@ -203,6 +209,12 @@ QPushButton#pillAdd {
     padding: 7px 14px; color: #6B7280; font-size: 15px; font-weight: 600;
 }
 QPushButton#pillAdd:hover { color: #111827; border-color: #1E88E5; }
+QPushButton#pillNav {
+    background: transparent; border: 1px solid #E5E7EB; border-radius: 13px;
+    color: #6B7280; font-size: 15px; font-weight: 700;
+}
+QPushButton#pillNav:hover:enabled { color: #111827; border-color: #1E88E5; }
+QPushButton#pillNav:disabled { color: #C7CDD6; border-color: #F0F1F3; }
 /* 设备胶囊内下拉透明，融入胶囊（统一感） */
 QWidget#deviceCapsule QComboBox {
     background: transparent; border: none; padding: 2px 4px; color: #111827;
