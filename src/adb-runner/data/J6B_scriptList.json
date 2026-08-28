@@ -1,114 +1,181 @@
 {
+  "version": 1,
   "scripts": [
     {
       "id": 36,
       "name": "语音打开泊车",
-      "command": "adb shell am broadcast -a com.bitech.pilotparking.action.APA_POWER --es command open"
+      "command": "adb shell am broadcast -a com.bitech.pilotparking.action.APA_POWER --es command open",
+      "order": 0,
+      "category": "",
+      "description": ""
     },
     {
       "id": 35,
       "name": "显示开始泊车按钮",
-      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0"
-    },
-    {
-      "id": 32,
-      "name": "剩余xx米",
-      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 2 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 3 3 0 0 0 0 0 0 0 0 0 0 0 0 1 50 0 0 0"
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0",
+      "order": 1,
+      "category": "",
+      "description": ""
     },
     {
       "id": 31,
       "name": "循迹倒车成功",
-      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 5 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 5 0 0 0"
+      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 5 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 5 0 0 0",
+      "order": 2,
+      "category": "",
+      "description": ""
     },
     {
       "id": 30,
       "name": "POC-泊出",
-      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 2 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0"
+      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 2 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0",
+      "order": 3,
+      "category": "",
+      "description": ""
+    },
+    {
+      "id": 32,
+      "name": "剩余xx米",
+      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 2 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 3 3 0 0 0 0 0 0 0 0 0 0 0 0 1 50 0 0 0",
+      "order": 4,
+      "category": "",
+      "description": ""
     },
     {
       "id": 29,
       "name": "搜索车位",
-      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0"
+      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0",
+      "order": 5,
+      "category": "",
+      "description": ""
     },
     {
       "id": 28,
       "name": "自选车位",
-      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 3 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0"
+      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 3 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0",
+      "order": 6,
+      "category": "",
+      "description": ""
     },
     {
       "id": 27,
       "name": "apa页面-多设备-镇江",
-      "command": "adb -s IRPBNZMNLJAYWGCE shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0"
+      "command": "adb -s IRPBNZMNLJAYWGCE shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0",
+      "order": 7,
+      "category": "",
+      "description": ""
     },
     {
       "id": 26,
       "name": "拉取apa页面-多设备",
-      "command": "adb -s NBBQ85YD4TSG95LZ shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0"
+      "command": "adb -s NBBQ85YD4TSG95LZ shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0",
+      "order": 8,
+      "category": "",
+      "description": ""
     },
     {
       "id": 16,
       "name": "root",
-      "command": "adb root"
+      "command": "adb root",
+      "order": 9,
+      "category": "",
+      "description": ""
     },
     {
       "id": 15,
       "name": "install行车app",
-      "command": "adb install C:\\Users\\ganyifeng\\Desktop\\Android\\N50\\C3001202500006_SW_N50\\app\\build\\outputs\\apk\\release\\PilotParking.apk"
+      "command": "adb install C:\\Users\\ganyifeng\\Desktop\\Android\\N50\\C3001202500006_SW_N50\\app\\build\\outputs\\apk\\release\\PilotParking.apk",
+      "order": 10,
+      "category": "",
+      "description": ""
     },
     {
       "id": 18,
       "name": "杀行车app进程",
-      "command": "adb shell killall com.bitech.pilotparking"
-    },
-    {
-      "id": 25,
-      "name": "一键进入车位搜索",
-      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0"
+      "command": "adb shell killall com.bitech.pilotparking",
+      "order": 11,
+      "category": "",
+      "description": ""
     },
     {
       "id": 24,
       "name": "一键拉起自选",
-      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
+      "order": 12,
+      "category": "",
+      "description": ""
     },
     {
       "id": 23,
       "name": "泊车完成页面",
-      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 4 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 4 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
+      "order": 13,
+      "category": "",
+      "description": ""
     },
     {
       "id": 33,
       "name": "泊车失败",
-      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 5 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 5 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
+      "order": 14,
+      "category": "",
+      "description": ""
     },
     {
       "id": 34,
       "name": "apa退出",
-      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0"
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0",
+      "order": 15,
+      "category": "",
+      "description": ""
     },
     {
       "id": 3,
       "name": "拉起APA界面",
-      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0"
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0",
+      "order": 16,
+      "category": "",
+      "description": ""
+    },
+    {
+      "id": 25,
+      "name": "一键进入车位搜索",
+      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 0 0 0 0 && adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0",
+      "order": 17,
+      "category": "",
+      "description": ""
     },
     {
       "id": 1,
       "name": "启动IntelligentDriveService",
-      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService"
+      "command": "adb shell am startservice -n com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService",
+      "order": 18,
+      "category": "",
+      "description": ""
     },
     {
       "id": 2,
       "name": "合并初始化",
-      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0"
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfoExt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtMRAInfo 0 0 0 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtSvsFunctStatus 0 & adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASStrtNtfAVMInfo 0",
+      "order": 19,
+      "category": "",
+      "description": ""
     },
     {
       "id": 12,
       "name": "夜间模式",
-      "command": "adb shell cmd uimode night yes"
+      "command": "adb shell cmd uimode night yes",
+      "order": 20,
+      "category": "",
+      "description": ""
     },
     {
       "id": 13,
       "name": "白天模式",
-      "command": "adb shell cmd uimode night no"
+      "command": "adb shell cmd uimode night no",
+      "order": 21,
+      "category": "",
+      "description": ""
     }
   ]
 }

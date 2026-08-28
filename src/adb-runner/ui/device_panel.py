@@ -37,8 +37,8 @@ class DevicePanel(QWidget):
         self.refresh_btn.clicked.connect(self.refresh)
 
         lay = QHBoxLayout(self)
-        lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(8)
+        lay.setContentsMargins(14, 0, 6, 0)
+        lay.setSpacing(10)
         lay.addWidget(self._dot)
         lay.addWidget(self.combo, 1)
         lay.addWidget(self.refresh_btn)

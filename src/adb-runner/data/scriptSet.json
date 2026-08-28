@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "current_set": "test1",
+  "current_set": "J6B",
   "sets": [
     {
       "name": "J6B",
@@ -25,7 +25,7 @@
   ],
   "settings": {
     "multi_device": true,
-    "last_device": "192.168.134.7:36021",
+    "last_device": "Z5V8HYIZT8Z9SW9T",
     "log_mode": "error_only",
     "log_keep_days": 8,
     "log_max_mb": 10,

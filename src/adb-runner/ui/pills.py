@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QPushButton, QScrollArea, QWidget,
 )
 
+from ui.icons import NEUTRAL, svg_icon
+
 
 class _HPillScroll(QScrollArea):
     """横向胶囊滚动区：鼠标滚轮 → 水平滚动（分组多时方便左右浏览）。"""
@@ -50,9 +52,11 @@ class GroupPills(QWidget):
         self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self._scroll.horizontalScrollBar().valueChanged.connect(self._update_nav)
 
-        def _nav_button(symbol, tooltip):
-            b = QPushButton(symbol)
+        def _nav_button(icon_name, tooltip):
+            b = QPushButton()
             b.setObjectName("pillNav")
+            b.setIcon(svg_icon(icon_name, NEUTRAL, 16))
+            b.setIconSize(b.iconSize())
             b.setToolTip(tooltip)
             b.setFixedSize(26, 26)
             b.setFocusPolicy(Qt.NoFocus)
@@ -60,8 +64,8 @@ class GroupPills(QWidget):
             b.setEnabled(False)
             return b
 
-        self._prev_btn = _nav_button("‹", "上一页分组")
-        self._next_btn = _nav_button("›", "下一页分组")
+        self._prev_btn = _nav_button("chevron-left", "上一页分组")
+        self._next_btn = _nav_button("chevron-right", "下一页分组")
         self._prev_btn.clicked.connect(lambda: self._page(-1))
         self._next_btn.clicked.connect(lambda: self._page(1))
 

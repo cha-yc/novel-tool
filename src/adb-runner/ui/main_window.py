@@ -295,9 +295,9 @@ class MainWindow(QMainWindow):
         ids = [s.get("id", 0) for s in self._scripts]
         return (max(ids) + 1) if ids else 1
 
-    def _add_script(self, data=None):
+    def _add_script(self, data=None, mode="new"):
         self._list.cancel_drag()
-        dlg = ScriptEditDialog(data, self)
+        dlg = ScriptEditDialog(data, mode, self)
         if not dlg.exec():
             return
         d = dlg.data()
@@ -363,7 +363,7 @@ class MainWindow(QMainWindow):
         if act == edit_act:
             self._edit_script(index)
         elif act == copy_act:
-            self._add_script(dict(self._scripts[index]))
+            self._add_script(dict(self._scripts[index]), mode="copy")
         elif act == up_act:
             self._move_script(index, -1)
         elif act == down_act:

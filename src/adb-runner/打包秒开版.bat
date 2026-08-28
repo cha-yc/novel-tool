@@ -15,6 +15,11 @@ exit /b 1
 
 :build
 echo [2/3] building onedir (fast start)...
+rem 备份现有 data：onedir 构建会清空整个 dist\ADB脚本工具，先保护用户数据
+if exist "dist\ADB脚本工具\data" (
+    if exist "%~dp0data_backup" rmdir /s /q "%~dp0data_backup"
+    xcopy /E /I /Y "dist\ADB脚本工具\data" "%~dp0data_backup" >nul
+)
 "%~dp0..\..\.venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean "%~dp0tool_onedir.spec"
 if not errorlevel 1 goto copy
 echo Build failed. See errors above.
@@ -22,10 +27,13 @@ pause
 exit /b 1
 
 :copy
-echo [3/3] copy data into the app folder...
+echo [3/3] restore data into the app folder (merge, never delete)...
 for /d %%D in ("dist\*") do if exist "%%D\ADB*.exe" (
-    if exist "%%D\data" rmdir /s /q "%%D\data"
-    if exist "%~dp0data" xcopy /E /I /Y "%~dp0data" "%%D\data" >nul
+    if exist "%~dp0data_backup" (
+        xcopy /E /I /Y "%~dp0data_backup" "%%D\data" >nul
+    ) else if exist "%~dp0data" (
+        xcopy /E /I /Y "%~dp0data" "%%D\data" >nul
+    )
 )
 
 echo.

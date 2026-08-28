@@ -302,6 +302,38 @@ class _DragCardOverlay(QWidget):
         p.end()
 
 
+class _DropRingOverlay(QWidget):
+    """落点圈选环：视口内覆盖层，置顶于浮动卡片之上。
+
+    直接以独立子控件绘制主题色描边，绕开"高亮画在行卡片上、
+    被不透明浮动卡片盖住而闪灭"的问题，保证圈选环始终可见。
+    """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.hide()
+
+    def set_target_rect(self, r: QRect):
+        """定位并显示圈选环；空矩形 → 隐藏（无效落点）。"""
+        if r.isNull() or r.isEmpty():
+            self.hide()
+            return
+        self.setGeometry(r)
+        self.show()
+        self.raise_()
+        self.update()
+
+    def paintEvent(self, e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setPen(QPen(QColor(theme.color("accent")), 2))
+        p.setBrush(Qt.NoBrush)
+        p.drawRoundedRect(self.rect().adjusted(2, 2, -2, -2), 14, 14)
+        p.end()
+
+
 class ScriptList(QListWidget):
     """脚本卡片列表：负责行定位、卡片悬浮拖拽（实时交换）、边界自动滚动。"""
 
@@ -331,6 +363,9 @@ class ScriptList(QListWidget):
         # 拖拽浮动卡片：视口内覆盖层（置顶 + 鼠标穿透，安全且始终在最上层）
         self._overlay = _DragCardOverlay(self.viewport())
         self._overlay.hide()
+        # 落点圈选环：再置顶于浮动卡片之上，避免被不透明卡片盖住
+        self._drop_ring = _DropRingOverlay(self.viewport())
+        self._drop_ring.set_target_rect(QRect())
 
     def set_drag_enabled(self, on: bool):
         self._drag_enabled = on
@@ -426,7 +461,24 @@ class ScriptList(QListWidget):
         if i >= 0:
             self.context_index.emit(i, gpos)
 
-    # ---------- 卡片悬浮拖拽（paint 绘制浮动卡片 + 插入线，无顶层窗口，杜绝崩溃） ----------
+    # ---------- 卡片悬浮拖拽（覆盖层浮动卡片 + 落点圈选，无插入线/顶层窗口） ----------
+
+    def _update_drop_ring(self):
+        """让圈选环跟随目标行：仅当真正要移动到别的行时圈选目标卡片。
+
+        未移动/回到原位（target == 原行）、无效落点、结束拖拽 → 一律隐藏，
+        避免刚按下拖拽、或鼠标移回原位时圆圈还挂在原行/第一行上。"""
+        if (not self._dragging or not self._valid_drop
+                or self._target_row == self._drag_orig):
+            self._drop_ring.set_target_rect(QRect())
+            return
+        tgt = self._target_row
+        if tgt >= self.count() and self.count() > 0:  # 插入点在末尾之后 → 圈最后一张
+            tgt = self.count() - 1
+        if 0 <= tgt < self.count():
+            self._drop_ring.set_target_rect(self.visualItemRect(self.item(tgt)))
+        else:
+            self._drop_ring.set_target_rect(QRect())
 
     def _on_drag_triggered(self, widget):
         i = self._row_of(widget)
@@ -440,7 +492,9 @@ class ScriptList(QListWidget):
             self._position_overlay()
             self._overlay.show()
             self._overlay.raise_()
+            self._drop_ring.raise_()  # 圈选环置顶于浮动卡片
             widget.set_placeholder(True)  # 原位置变空白占位
+            self._update_drop_ring()
             self._scroll_timer.start()
 
     def _position_overlay(self):
@@ -455,9 +509,12 @@ class ScriptList(QListWidget):
         vp = self.viewport()
         pos = vp.mapFromGlobal(gpos)
         self._position_overlay()
-        # 光标在列表内才算有效落点；拖出列表 = 无效，不排序
-        self._valid_drop = vp.rect().contains(pos)
-        self._target_row = self._target_from_pos(pos) if self._valid_drop else self._drag_orig
+        # 光标在列表内且落在有效位置（某行/下方追加区）才算有效；
+        # 拖出列表或停在列表上方空白区 = 无效，不排序、不圈选
+        tgt = self._target_from_pos(pos) if vp.rect().contains(pos) else -1
+        self._valid_drop = tgt >= 0
+        self._target_row = tgt if self._valid_drop else self._drag_orig
+        self._update_drop_ring()
         h = vp.height()
         zone = max(h // 4, 24)
         if pos.y() < zone:
@@ -469,15 +526,30 @@ class ScriptList(QListWidget):
         vp.update()
 
     def _target_from_pos(self, pos) -> int:
-        """由指针位置推断插入点：命中行→其序号；下方空区→末尾。"""
-        item = self.itemAt(pos)
-        if item is not None:
-            return self.row(item)
-        if self.count() > 0:
-            last_rect = self.visualItemRect(self.item(self.count() - 1))
-            if pos.y() > last_rect.bottom():
-                return self.count()
-        return 0
+        """由指针位置推断插入点（0..count）；列表上方空白区等无位置处返回 -1。
+
+        命中行按中心拆分：上半→该行前、下半→该行后；列表下方→末尾追加；
+        行间空隙吸附到最近的行再拆分，平滑不跳闪。返回 -1 表示无有效落点，
+        调用方应视作无效（不显示圈选、不排序）。"""
+        n = self.count()
+        if n == 0:
+            return -1
+        first_rect = self.visualItemRect(self.item(0))
+        last_rect = self.visualItemRect(self.item(n - 1))
+        if pos.y() < first_rect.top():
+            return -1                      # 列表上方空白区 → 无有效落点
+        if pos.y() >= last_rect.bottom():
+            return n                       # 列表下方 → 末尾追加
+        best = 0
+        best_d = float("inf")
+        for i in range(n):                 # 命中某行或行间空隙：取纵向最近的行
+            r = self.visualItemRect(self.item(i))
+            d = min(abs(pos.y() - r.top()), abs(pos.y() - r.bottom()))
+            if d < best_d:
+                best_d = d
+                best = i
+        r = self.visualItemRect(self.item(best))
+        return best if pos.y() < r.center().y() else best + 1
 
     def _on_auto_scroll(self):
         if not self._dragging:
@@ -488,6 +560,8 @@ class ScriptList(QListWidget):
             bar = self.verticalScrollBar()
             bar.setValue(bar.value() + self._scroll_dir * 8)
             self._on_drag_move(QCursor.pos())
+        # 滚动后行的屏幕位置会变，圈选环随之重定位
+        self._update_drop_ring()
         self.viewport().update()
 
     def _on_drag_release(self):
@@ -521,27 +595,5 @@ class ScriptList(QListWidget):
         self._valid_drop = True
         self._scroll_dir = 0
         self._overlay.hide()
+        self._drop_ring.set_target_rect(QRect())  # 隐藏圈选环
         self.viewport().update()
-
-    def paintEvent(self, e):
-        """绘制拖拽插入线（浮动卡片由视口内覆盖层绘制，置顶显示）。"""
-        super().paintEvent(e)
-        if not self._dragging:
-            return
-        vp = self.viewport()
-        p = QPainter(vp)
-        p.setRenderHint(QPainter.Antialiasing)
-        # 插入线
-        if self._valid_drop and 0 <= self._target_row <= self.count():
-            p.setPen(Qt.NoPen)
-            p.setBrush(QColor(theme.color("accent")))
-            if self._target_row < self.count():
-                r = self.visualItemRect(self.item(self._target_row))
-                y = max(r.top() - 3, 0)
-            elif self.count() > 0:
-                r = self.visualItemRect(self.item(self.count() - 1))
-                y = r.bottom()
-            else:
-                y = 2
-            p.drawRoundedRect(QRect(6, y, max(vp.width() - 12, 20), 3), 2, 2)
-        p.end()

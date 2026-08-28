@@ -39,6 +39,12 @@ class OutputPanel(QWidget):
         lbl.setStyleSheet("font-weight:600;")
         head.addWidget(lbl)
         head.addStretch(1)
+        self.clear_btn = QToolButton()
+        self.clear_btn.setIcon(svg_icon("trash", NEUTRAL, 15))
+        self.clear_btn.setToolTip("清空当前设备的输出")
+        self.clear_btn.setFocusPolicy(Qt.NoFocus)
+        self.clear_btn.clicked.connect(self._clear_current)
+        head.addWidget(self.clear_btn)
 
         self.tabs = QTabWidget()
         self.tabs.setObjectName("outputTabs")  # 触发中性小标签样式（去掉大块蓝色）
@@ -91,3 +97,9 @@ class OutputPanel(QWidget):
     def switch_to(self, serial: str):
         if serial and serial in self._pages:
             self.tabs.setCurrentWidget(self._pages[serial])
+
+    def _clear_current(self):
+        """清空当前设备 Tab 的输出内容（占位页忽略）。"""
+        w = self.tabs.currentWidget()
+        if w is not None and w is not self._empty:
+            w.clear()

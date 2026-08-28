@@ -25,6 +25,19 @@ QComboBox, QComboBox QAbstractItemView {
     background-color: #262626; border: 1px solid #2E2E2E; border-radius: 12px;
     padding: 6px 10px; color: #ECECEC; selection-background-color: #4F8CFF;
 }
+QSpinBox {
+    background-color: #262626; border: 1px solid #2E2E2E; border-radius: 10px;
+    padding: 6px 10px; color: #ECECEC; selection-background-color: #4F8CFF;
+}
+QSpinBox:focus { border: 1px solid #4F8CFF; }
+QSpinBox::up-button, QSpinBox::down-button {
+    background: #313131; border: none; width: 20px; border-radius: 6px; subcontrol-origin: border;
+}
+QSpinBox::up-button { subcontrol-position: top right; }
+QSpinBox::down-button { subcontrol-position: bottom right; }
+QSpinBox::up-button:hover, QSpinBox::down-button:hover { background: #3D3D3D; }
+QSpinBox::up-arrow { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 5px solid #ECECEC; }
+QSpinBox::down-arrow { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid #ECECEC; }
 QPushButton {
     background-color: #262626; border: 1px solid #2E2E2E; border-radius: 12px;
     padding: 8px 14px; color: #ECECEC;
@@ -47,11 +60,26 @@ QToolButton#addGroup:hover { color: #ECECEC; background: #262626; }
 QListWidget { background-color: transparent; border: none; outline: none; padding: 2px; }
 QListWidget::item { border-radius: 16px; border: 1px solid transparent; }
 QListWidget::item:selected { background: rgba(79,140,255,0.10); border: 1px solid rgba(79,140,255,0.45); }
-QScrollBar:vertical { background: transparent; width: 6px; margin: 2px; }
-QScrollBar::handle:vertical { background: #444444; border-radius: 3px; min-height: 30px; }
-QScrollBar::add-line, QScrollBar::sub-line { height: 0; width: 0; }
-QScrollBar:horizontal { background: transparent; height: 6px; margin: 2px; }
-QScrollBar::handle:horizontal { background: #444444; border-radius: 3px; min-width: 30px; }
+QScrollBar:vertical {
+    background: transparent; width: 8px; margin: 2px;
+}
+QScrollBar::handle:vertical {
+    background: #4A4A4A; border-radius: 4px; min-height: 30px; margin: 0 1px;
+}
+QScrollBar::handle:vertical:hover { background: #6A6A6A; }
+QScrollBar::handle:vertical:pressed { background: #4F8CFF; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; width: 0; }
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
+QScrollBar:horizontal {
+    background: transparent; height: 8px; margin: 2px;
+}
+QScrollBar::handle:horizontal {
+    background: #4A4A4A; border-radius: 4px; min-width: 30px; margin: 1px 0;
+}
+QScrollBar::handle:horizontal:hover { background: #6A6A6A; }
+QScrollBar::handle:horizontal:pressed { background: #4F8CFF; }
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; height: 0; }
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal { background: transparent; }
 QMenu {
     background-color: #262626; border: 1px solid #2E2E2E; border-radius: 12px; padding: 6px;
 }
@@ -96,11 +124,11 @@ QPushButton#pillAdd {
 }
 QPushButton#pillAdd:hover { color: #ECECEC; border-color: #4F8CFF; }
 QPushButton#pillNav {
-    background: transparent; border: 1px solid #2E2E2E; border-radius: 13px;
-    color: #9AA0A6; font-size: 15px; font-weight: 700;
+    background: #262626; border: 1px solid #3A3A3A; border-radius: 13px;
+    color: #C9CDD3; font-size: 15px; font-weight: 700; padding: 0;
 }
-QPushButton#pillNav:hover:enabled { color: #ECECEC; border-color: #4F8CFF; }
-QPushButton#pillNav:disabled { color: #4A4A4A; border-color: #2A2A2A; }
+QPushButton#pillNav:hover:enabled { background: #313131; color: #ECECEC; border-color: #4F8CFF; }
+QPushButton#pillNav:disabled { color: #4A4A4A; border-color: #2A2A2A; background: #1A1A1A; }
 /* 设备胶囊内下拉透明，融入胶囊（统一感） */
 QWidget#deviceCapsule QComboBox {
     background: transparent; border: none; padding: 2px 4px; color: #ECECEC;
@@ -139,6 +167,19 @@ QComboBox, QComboBox QAbstractItemView {
     background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px;
     padding: 6px 10px; color: #111827; selection-background-color: #1E88E5;
 }
+QSpinBox {
+    background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px;
+    padding: 6px 10px; color: #111827; selection-background-color: #1E88E5;
+}
+QSpinBox:focus { border: 1px solid #1E88E5; }
+QSpinBox::up-button, QSpinBox::down-button {
+    background: #F1F3F5; border: none; width: 20px; border-radius: 6px; subcontrol-origin: border;
+}
+QSpinBox::up-button { subcontrol-position: top right; }
+QSpinBox::down-button { subcontrol-position: bottom right; }
+QSpinBox::up-button:hover, QSpinBox::down-button:hover { background: #E5E7EB; }
+QSpinBox::up-arrow { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 5px solid #6B7280; }
+QSpinBox::down-arrow { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid #6B7280; }
 QPushButton {
     background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px;
     padding: 8px 14px; color: #111827;
@@ -161,11 +202,26 @@ QToolButton#addGroup:hover { color: #111827; background: #F1F3F5; }
 QListWidget { background-color: transparent; border: none; outline: none; padding: 2px; }
 QListWidget::item { border-radius: 16px; border: 1px solid transparent; }
 QListWidget::item:selected { background: rgba(30,136,229,0.10); border: 1px solid rgba(30,136,229,0.45); }
-QScrollBar:vertical { background: transparent; width: 6px; margin: 2px; }
-QScrollBar::handle:vertical { background: #D3D7DE; border-radius: 3px; min-height: 30px; }
-QScrollBar::add-line, QScrollBar::sub-line { height: 0; width: 0; }
-QScrollBar:horizontal { background: transparent; height: 6px; margin: 2px; }
-QScrollBar::handle:horizontal { background: #D3D7DE; border-radius: 3px; min-width: 30px; }
+QScrollBar:vertical {
+    background: transparent; width: 8px; margin: 2px;
+}
+QScrollBar::handle:vertical {
+    background: #C3C9D2; border-radius: 4px; min-height: 30px; margin: 0 1px;
+}
+QScrollBar::handle:vertical:hover { background: #A9B1BC; }
+QScrollBar::handle:vertical:pressed { background: #1E88E5; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; width: 0; }
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
+QScrollBar:horizontal {
+    background: transparent; height: 8px; margin: 2px;
+}
+QScrollBar::handle:horizontal {
+    background: #C3C9D2; border-radius: 4px; min-width: 30px; margin: 1px 0;
+}
+QScrollBar::handle:horizontal:hover { background: #A9B1BC; }
+QScrollBar::handle:horizontal:pressed { background: #1E88E5; }
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; height: 0; }
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal { background: transparent; }
 QMenu {
     background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; padding: 6px;
 }
@@ -210,11 +266,11 @@ QPushButton#pillAdd {
 }
 QPushButton#pillAdd:hover { color: #111827; border-color: #1E88E5; }
 QPushButton#pillNav {
-    background: transparent; border: 1px solid #E5E7EB; border-radius: 13px;
-    color: #6B7280; font-size: 15px; font-weight: 700;
+    background: #FFFFFF; border: 1px solid #D8DDE3; border-radius: 13px;
+    color: #6B7280; font-size: 15px; font-weight: 700; padding: 0;
 }
-QPushButton#pillNav:hover:enabled { color: #111827; border-color: #1E88E5; }
-QPushButton#pillNav:disabled { color: #C7CDD6; border-color: #F0F1F3; }
+QPushButton#pillNav:hover:enabled { background: #F1F3F5; color: #111827; border-color: #1E88E5; }
+QPushButton#pillNav:disabled { color: #C7CDD6; border-color: #EDEFF2; background: #F7F8FA; }
 /* 设备胶囊内下拉透明，融入胶囊（统一感） */
 QWidget#deviceCapsule QComboBox {
     background: transparent; border: none; padding: 2px 4px; color: #111827;

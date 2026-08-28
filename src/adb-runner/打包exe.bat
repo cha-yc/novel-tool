@@ -21,8 +21,7 @@ pause
 exit /b 1
 
 :copy
-echo [3/3] copy data next to exe...
-if exist "dist\data" rmdir /s /q "dist\data"
+echo [3/3] copy data next to exe (merge, never delete)...
 if exist "%~dp0data" xcopy /E /I /Y "%~dp0data" "dist\data" >nul
 
 echo.
