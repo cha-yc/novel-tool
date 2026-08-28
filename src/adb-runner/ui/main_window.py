@@ -82,6 +82,7 @@ class MainWindow(QMainWindow):
         self._scripts = []
         self._current_set = ""
         self._exec_thread = None
+        self._run_index = -1
 
         script_set = self._store.load_script_set()
         self._settings = script_set["settings"]
@@ -278,7 +279,7 @@ class MainWindow(QMainWindow):
         count = len(self._store.load_scripts(name))
         ret = QMessageBox.question(
             self, "删除分组",
-            f"确定删除分组「{name}」吗？\n（含 {count} 条脚本，脚本文件保留在磁盘，不会删除数据）",
+            f"确定删除分组「{name}」吗？\n（含 {count} 条脚本，将永久删除，不可恢复）",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.Yes:
             self._store.delete_group(name)
@@ -426,11 +427,15 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "提示", f"脚本「{script.get('name', '')}」没有命令。")
             return
 
-        self._output.expand()
+        # 收起日志时不自动展开：输出仍写入对应设备的 Tab，用户可自行展开查看
         self._output.ensure_tab(serial, serial)
         self._output.switch_to(serial)
         self._output.append(serial, f"\n▶ [{script.get('name', '')}] {cmd}")
         self._logger.info("执行 [%s] 于 %s", script.get("name", ""), serial)
+
+        # 该卡片显示旋转动画，作为执行反馈
+        self._run_index = index
+        self._list.set_running_row(index)
 
         self._run_serial = serial
         self._run_lines = []
@@ -447,6 +452,9 @@ class MainWindow(QMainWindow):
 
     def _on_exec_finished(self, code):
         """按退出码 + 输出内容综合判断结果，避免退出码 0 但实际失败被误判成功。"""
+        # 停止执行动画反馈
+        self._run_index = -1
+        self._list.set_running_row(-1)
         failed = (code != 0) or any(looks_error(l) for l in self._run_lines)
         if failed:
             self._output.append(

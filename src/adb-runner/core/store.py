@@ -155,17 +155,29 @@ class JsonStore:
             return True
 
     def delete_group(self, name):
-        """删除分组（仅从分组定义移除；脚本文件保留在磁盘，不删除用户数据）。"""
+        """删除分组，并物理删除其脚本数据文件（真实删除，不留孤儿文件）。"""
         with self._lock:
             self.load_script_set()
             sets = [s for s in self._script_set["sets"] if s["name"] != name]
             if len(sets) == len(self._script_set["sets"]):
                 return False
+            # 先记下数据文件名，再从分组定义中移除
+            file_name = next(
+                (s.get("file") for s in self._script_set["sets"] if s["name"] == name),
+                None)
             self._script_set["sets"] = sets
             if self._script_set["current_set"] == name:
                 self._script_set["current_set"] = sets[0]["name"] if sets else ""
             self._scripts_cache.pop(name, None)
             self.save_script_set()
+            # 物理删除该分组的脚本数据文件
+            if file_name:
+                path = self.data_dir / file_name
+                try:
+                    if path.exists():
+                        path.unlink()
+                except OSError:
+                    pass
             return True
 
     # ---------------- scriptList ----------------

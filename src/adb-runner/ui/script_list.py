@@ -13,6 +13,47 @@ from ui.icons import NEUTRAL, WHITE, svg_icon
 ROW_HEIGHT = 60  # 脚本卡片行高（item 与 widget 必须一致，否则互相覆盖）
 
 
+class Spinner(QWidget):
+    """旋转加载圈：覆盖在 ▶ 按钮上，作为脚本执行的动画反馈。"""
+
+    def __init__(self, parent=None, size=36):
+        super().__init__(parent)
+        self.setFixedSize(size, size)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)  # 不拦截点击
+        self._angle = 0
+        self._timer = QTimer(self)
+        self._timer.setInterval(30)
+        self._timer.timeout.connect(self._step)
+
+    def start(self):
+        self._angle = 0
+        self._timer.start()
+        self.show()
+        self.raise_()
+
+    def stop(self):
+        self._timer.stop()
+        self.hide()
+
+    def _step(self):
+        self._angle = (self._angle + 12) % 360
+        self.update()
+
+    def paintEvent(self, e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        rect = self.rect()
+        # 实心主题色圆 + 白色旋转弧 → 明显"执行中"
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor(theme.color("accent")))
+        p.drawEllipse(rect)
+        pen = QPen(QColor("#FFFFFF"), 3)
+        pen.setCapStyle(Qt.RoundCap)
+        p.setPen(pen)
+        p.drawArc(rect.adjusted(6, 6, -6, -6), -self._angle * 16, 100 * 16)
+        p.end()
+
+
 class ScriptItemWidget(QWidget):
     """脚本卡片行。长按行背景触发卡片悬浮拖拽。"""
 
@@ -56,6 +97,10 @@ class ScriptItemWidget(QWidget):
         self._play.setFocusPolicy(Qt.NoFocus)
         self._play.setToolTip("执行")
         self._play.clicked.connect(self.execute_requested)
+
+        # 执行反馈：旋转加载圈，覆盖在 ▶ 按钮上（不改变布局）
+        self._spinner = Spinner(self)
+        self._spinner.hide()
 
         # 名称 + 元信息（分类标签 + 命令预览）
         self._name = QLabel()
@@ -111,6 +156,19 @@ class ScriptItemWidget(QWidget):
     def set_order(self, n: int):
         self._idx.setText(f"{n:02d}")
 
+    def set_running(self, on: bool):
+        """执行动画反馈：运行中在 ▶ 按钮位置显示旋转加载圈。"""
+        if on:
+            self._spinner.start()
+            self._reposition_spinner()
+        else:
+            self._spinner.stop()
+
+    def _reposition_spinner(self):
+        c = self._play.geometry().center()
+        self._spinner.move(c.x() - self._spinner.width() // 2,
+                           c.y() - self._spinner.height() // 2)
+
     @staticmethod
     def _preview_text(command: str) -> str:
         return " ".join(command.split())
@@ -130,6 +188,9 @@ class ScriptItemWidget(QWidget):
     def resizeEvent(self, e):
         super().resizeEvent(e)
         self._update_elide()
+        sp = getattr(self, "_spinner", None)
+        if sp is not None and sp.isVisible():
+            self._reposition_spinner()
 
     # ---------- 选中 / 拖拽占位 视觉 ----------
 
@@ -263,6 +324,7 @@ class ScriptList(QListWidget):
         self._valid_drop = True
         self._scroll_dir = 0
         self._selected_row = -1
+        self._running_row = -1
         self._scroll_timer = QTimer(self)
         self._scroll_timer.setInterval(30)
         self._scroll_timer.timeout.connect(self._on_auto_scroll)
@@ -276,6 +338,7 @@ class ScriptList(QListWidget):
     # ---------- 数据填充 ----------
 
     def set_scripts(self, scripts):
+        self._clear_running()
         bar = self.verticalScrollBar()
         pos = bar.value()
         self.clear()
@@ -285,6 +348,27 @@ class ScriptList(QListWidget):
         # 重建后恢复滚动位置（拖拽排序后不跳回顶部）
         if pos > 0:
             QTimer.singleShot(0, lambda: bar.setValue(min(pos, bar.maximum())))
+
+    def set_running_row(self, i: int):
+        """设置正在执行的脚本行（该卡片显示旋转动画），-1 表示无。"""
+        if i == self._running_row:
+            return
+        if 0 <= self._running_row < self.count():
+            w = self.itemWidget(self.item(self._running_row))
+            if w is not None:
+                w.set_running(False)
+        self._running_row = i
+        if 0 <= i < self.count():
+            w = self.itemWidget(self.item(i))
+            if w is not None:
+                w.set_running(True)
+
+    def _clear_running(self):
+        if 0 <= self._running_row < self.count():
+            w = self.itemWidget(self.item(self._running_row))
+            if w is not None:
+                w.set_running(False)
+        self._running_row = -1
 
     def add_script_item(self, script: dict, order: int):
         item = QListWidgetItem()
