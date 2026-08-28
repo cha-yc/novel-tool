@@ -153,7 +153,9 @@ class MainWindow(QMainWindow):
         self._list.context_index.connect(self._on_script_menu)
 
         # ---------- 输出面板 ----------
-        self._output = OutputPanel()
+        self._output = OutputPanel(
+            expanded=self._settings.get("output_expanded", True))
+        self._output.expand_changed.connect(self._on_output_expand_changed)
 
         central = QWidget()
         v = QVBoxLayout(central)
@@ -180,6 +182,12 @@ class MainWindow(QMainWindow):
         return super().event(e)
 
     # ================= 主题 =================
+
+    def _on_output_expand_changed(self, on):
+        """输出面板收起/展开状态变化 → 持久化，下次启动恢复。"""
+        if self._settings.get("output_expanded") != on:
+            self._settings["output_expanded"] = on
+            self._store.save_script_set()
 
     def _update_theme_icon(self):
         name = "sun" if self._theme == "dark" else "moon"

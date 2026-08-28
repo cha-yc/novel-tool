@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """底部输出面板：可折叠，按设备分 Tab 展示执行结果。"""
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import (
     QHBoxLayout, QLabel, QPlainTextEdit, QTabWidget, QToolButton, QVBoxLayout, QWidget,
@@ -15,10 +15,12 @@ class OutputPanel(QWidget):
 
     _CONSOLE_MIN = 150
 
-    def __init__(self, parent=None):
+    expand_changed = Signal(bool)  # 收起/展开状态变化（供外部记忆持久化）
+
+    def __init__(self, expanded=True, parent=None):
         super().__init__(parent)
         self._pages = {}  # serial -> QPlainTextEdit
-        self._expanded = True
+        self._expanded = bool(expanded)
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
@@ -31,7 +33,7 @@ class OutputPanel(QWidget):
         self.toggle_btn.setIcon(svg_icon("chevron", NEUTRAL, 16))
         self.toggle_btn.setToolTip("折叠 / 展开输出")
         self.toggle_btn.setCheckable(True)
-        self.toggle_btn.setChecked(True)
+        self.toggle_btn.setChecked(self._expanded)
         self.toggle_btn.setFocusPolicy(Qt.NoFocus)
         self.toggle_btn.toggled.connect(self._toggle)
         head.addWidget(self.toggle_btn)
@@ -58,11 +60,16 @@ class OutputPanel(QWidget):
         lay.addLayout(head)
         lay.addWidget(self.tabs, 1)
 
+        # 按记忆的初始状态应用收起/展开（初始化时未连接信号，不触发保存）
+        self.tabs.setVisible(self._expanded)
+        self.tabs.setMinimumHeight(self._CONSOLE_MIN if self._expanded else 0)
+
     def _toggle(self, on):
         self._expanded = on
         self.tabs.setVisible(on)
         # 收起时把最小高度归零，布局才会把空间还给脚本列表
         self.tabs.setMinimumHeight(self._CONSOLE_MIN if on else 0)
+        self.expand_changed.emit(on)
 
     def expand(self):
         self._expanded = True

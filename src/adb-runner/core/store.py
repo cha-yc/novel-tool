@@ -22,6 +22,7 @@ DEFAULT_SETTINGS = {
     "log_max_mb": 10,
     "long_press_ms": 500,
     "theme": "dark",            # dark | light
+    "output_expanded": True,    # 输出日志面板是否展开（记忆用户收起状态）
 }
 
 
