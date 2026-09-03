@@ -30,6 +30,7 @@
     "log_keep_days": 8,
     "log_max_mb": 10,
     "long_press_ms": 500,
-    "theme": "light"
+    "theme": "light",
+    "output_expanded": false
   }
 }

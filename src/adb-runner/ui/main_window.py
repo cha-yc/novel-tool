@@ -435,6 +435,14 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "提示", f"脚本「{script.get('name', '')}」没有命令。")
             return
 
+        # 同一时间只允许一个执行线程：快速连点会覆盖旧线程引用，
+        # 运行中的 QThread 被 Python 回收 → "QThread: Destroyed while
+        # thread is still running" → 进程闪退
+        t = self._exec_thread
+        if t is not None and t.isRunning():
+            self._output.append(serial, "⚠ 已有脚本正在执行，请等待完成后再运行。", "#FF9F0A")
+            return
+
         # 收起日志时不自动展开：输出仍写入对应设备的 Tab，用户可自行展开查看
         self._output.ensure_tab(serial, serial)
         self._output.switch_to(serial)
@@ -450,7 +458,15 @@ class MainWindow(QMainWindow):
         self._exec_thread = ExecThread(self._adb, cmd, serial)
         self._exec_thread.line_out.connect(self._on_exec_line)
         self._exec_thread.exec_finished.connect(self._on_exec_finished)
+        self._exec_thread.finished.connect(self._on_exec_thread_done)
         self._exec_thread.start()
+
+    def _on_exec_thread_done(self):
+        """线程真正结束后再释放引用并销毁对象，防止运行中被回收导致闪退。"""
+        t = self.sender()
+        if t is self._exec_thread:
+            self._exec_thread = None
+        t.deleteLater()
 
     def _on_exec_line(self, line):
         """逐行输出：疑似错误内容标红，其余默认色。"""
