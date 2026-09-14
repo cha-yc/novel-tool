@@ -176,6 +176,142 @@
       "order": 21,
       "category": "",
       "description": ""
+    },
+    {
+      "name": "巡航辅助系统已退出",
+      "command": "db shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtICAInfo 7 4 0 0",
+      "category": "",
+      "description": "",
+      "id": 37,
+      "order": 22
+    },
+    {
+      "name": "somip信号重置",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtICAInfo 0 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 38,
+      "order": 23
+    },
+    {
+      "name": "循迹倒车退出",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 5 0 0 0 0 33",
+      "category": "",
+      "description": "",
+      "id": 39,
+      "order": 24
+    },
+    {
+      "name": "循迹倒车已完成",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 5 0 0 0 0 34",
+      "category": "",
+      "description": "",
+      "id": 40,
+      "order": 25
+    },
+    {
+      "name": "请关闭车门",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 5 0 E 0 0 65",
+      "category": "",
+      "description": "",
+      "id": 41,
+      "order": 26
+    },
+    {
+      "name": "重置（请关闭车门）",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 0 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 42,
+      "order": 27
+    },
+    {
+      "name": "语音打开循迹倒车",
+      "command": "adb shell am broadcast -a com.bitech.pilotparking.action.MRA_POWER --es command open",
+      "category": "",
+      "description": "",
+      "id": 44,
+      "order": 28
+    },
+    {
+      "name": "障碍物阻挡，请调整目标车位",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 2A 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 47,
+      "order": 29
+    },
+    {
+      "name": "请松开刹车",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 13 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 45,
+      "order": 30
+    },
+    {
+      "name": "路径规划失败",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 30 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 46,
+      "order": 31
+    },
+    {
+      "name": "请关闭车门",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 E 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 48,
+      "order": 32
+    },
+    {
+      "name": "剩余3米",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtAPARPAInfo 0 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 6.2 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 49,
+      "order": 33
+    },
+    {
+      "name": "可轻踩油门驾驶车辆",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 45 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 50,
+      "order": 34
+    },
+    {
+      "name": "泊车中，请注意周围环境",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 1 0 2B 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 51,
+      "order": 35
+    },
+    {
+      "name": "驾驶模式不满足，泊车暂不可用",
+      "command": "adb shell dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService soa ADASstrtParkingGenaralInfo 0 0 38 0 0 0",
+      "category": "",
+      "description": "",
+      "id": 52,
+      "order": 36
+    },
+    {
+      "name": "导航前置",
+      "command": "adb shell \"dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService tbt nav 0\"",
+      "category": "",
+      "description": "",
+      "id": 54,
+      "order": 37
+    },
+    {
+      "name": "剩余1000米 + 路名\"延安高架路\"",
+      "command": "adb shell \"dumpsys activity service com.bitech.pilotparking/com.bitech.intelligent.service.IntelligentDriveService tbt guide 1 1770 人民广场 0 0 2160 1800 18:30 延安中路 出口 向右 20 延安高架路\"",
+      "category": "",
+      "description": "",
+      "id": 53,
+      "order": 38
     }
   ]
 }
