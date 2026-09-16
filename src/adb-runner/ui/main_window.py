@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """主窗口 — 竖版窄窗（Material）：顶栏 / 设备胶囊 / 分组分段 / 搜索 / 脚本卡片 / 输出。"""
 
+import time
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, Qt, QThread, QTimer, Signal
@@ -9,7 +10,7 @@ from PySide6.QtWidgets import (
     QMessageBox, QPushButton, QToolButton, QVBoxLayout, QWidget,
 )
 
-from core.adb import AdbService
+from core.adb import AdbService, adb_available
 from core.logger import AppLogger
 from core.store import JsonStore
 from ui.device_panel import DevicePanel
@@ -20,6 +21,7 @@ from ui.pills import GroupPills
 from ui.script_list import ScriptList
 from ui.settings_dialog import SettingsDialog
 from ui.theme import apply_theme
+from ui.toast import Toast
 
 
 class DeviceRefreshThread(QThread):
@@ -36,7 +38,7 @@ class DeviceRefreshThread(QThread):
 
 
 class ExecThread(QThread):
-    """后台执行命令，逐行回传输出。"""
+    """后台按步骤执行脚本文本，逐行回传输出。"""
 
     line_out = Signal(str)
     exec_finished = Signal(int)
@@ -48,7 +50,7 @@ class ExecThread(QThread):
         self._serial = serial
 
     def run(self):
-        code = self._adb.run(self._command, self._serial, output_cb=self.line_out.emit)
+        code = self._adb.run_script(self._command, self._serial, output_cb=self.line_out.emit)
         self.exec_finished.emit(code)
 
 
@@ -74,8 +76,8 @@ class MainWindow(QMainWindow):
         self.resize(400, 760)
         self.setMinimumSize(340, 560)
         self._logger = logger or AppLogger.get()
-        self._store = JsonStore(data_dir)
-        self._adb = AdbService()
+        self._store = JsonStore(data_dir, logger=self._logger)
+        self._adb = AdbService(logger=self._logger)
         self._data_dir = Path(data_dir)
         self._log_dir = Path(log_dir) if log_dir else self._data_dir.parent / "logs"
         self._app_logger = app_logger
@@ -83,6 +85,10 @@ class MainWindow(QMainWindow):
         self._current_set = ""
         self._exec_thread = None
         self._run_index = -1
+        self._run_serial = ""
+        self._run_name = ""
+        self._run_started = 0.0
+        self._toast_widget = None  # 懒创建
 
         script_set = self._store.load_script_set()
         self._settings = script_set["settings"]
@@ -115,8 +121,9 @@ class MainWindow(QMainWindow):
 
         # ---------- 设备胶囊 ----------
         self._device_panel = DevicePanel(
-            self._adb, last_serial=self._settings.get("last_device", ""))
+            last_serial=self._settings.get("last_device", ""))
         self._device_panel.device_changed.connect(self._on_device_changed)
+        self._device_panel.refresh_requested.connect(self._refresh_devices)
 
         # ---------- 分组胶囊 ----------
         group_row = QHBoxLayout()
@@ -181,13 +188,37 @@ class MainWindow(QMainWindow):
             self._list.cancel_drag()
         return super().event(e)
 
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        if self._toast_widget is not None and self._toast_widget.isVisible():
+            self._toast_widget.reposition()
+
+    # ================= 反馈 =================
+
+    def _toast(self, text, kind="info"):
+        """非阻断提示（规格见 ui/toast.py 模块文档）。"""
+        if self._toast_widget is None:
+            self._toast_widget = Toast(self)
+        self._toast_widget.show_message(text, kind)
+
+    _SAVE_FAILED = object()  # 写盘失败哨兵（store 方法正常返回 False 属业务结果，需区分）
+
+    def _persist(self, what, fn, *args):
+        """执行会写盘的数据操作；OSError（目录只读/磁盘满等）→ 记错误日志并 toast。"""
+        try:
+            return fn(*args)
+        except OSError as e:
+            self._logger.error("保存失败(%s): %s", what, e)
+            self._toast(f"保存失败（{what}）：{e}", "error")
+            return self._SAVE_FAILED
+
     # ================= 主题 =================
 
     def _on_output_expand_changed(self, on):
         """输出面板收起/展开状态变化 → 持久化，下次启动恢复。"""
         if self._settings.get("output_expanded") != on:
             self._settings["output_expanded"] = on
-            self._store.save_script_set()
+            self._persist("设置", self._store.save_script_set)
 
     def _update_theme_icon(self):
         name = "sun" if self._theme == "dark" else "moon"
@@ -196,7 +227,7 @@ class MainWindow(QMainWindow):
     def _toggle_theme(self):
         self._theme = "light" if self._theme == "dark" else "dark"
         self._settings["theme"] = self._theme
-        self._store.save_script_set()
+        self._persist("设置", self._store.save_script_set)
         self._text_icon = DARK_TEXT if self._theme == "dark" else LIGHT_TEXT
         apply_theme(QApplication.instance(), self._theme)
         self._update_theme_icon()
@@ -219,10 +250,11 @@ class MainWindow(QMainWindow):
         if dlg.exec():
             vals = dlg.values()
             self._settings.update(vals)
-            self._store.save_script_set()
+            if self._persist("设置", self._store.save_script_set) is not self._SAVE_FAILED:
+                self._toast("设置已保存", "success")
+                self._logger.info("设置已保存: %s", vals)
             if self._app_logger is not None:
                 self._app_logger.reconfigure(**vals)
-            self._logger.info("设置已保存: %s", vals)
 
     # ================= 分组 =================
 
@@ -235,12 +267,9 @@ class MainWindow(QMainWindow):
         self._current_set = current if current in [n for n, _ in groups] else ""
         self._load_scripts()
 
-    def _refresh_group_counts(self):
-        self._rebuild_groups()
-
     def _on_group_picked(self, name):
         self._current_set = name
-        self._store.switch_set(name)
+        self._persist("设置", self._store.switch_set, name)
         self._load_scripts()
 
     def _on_group_menu(self, name, gpos):
@@ -261,8 +290,11 @@ class MainWindow(QMainWindow):
         name = GroupDialog.get_name("新建分组", parent=self)
         if not name:
             return
-        if not self._store.create_group(name):
-            QMessageBox.information(self, "提示", f"分组「{name}」已存在。")
+        r = self._persist("分组", self._store.create_group, name)
+        if r is self._SAVE_FAILED:
+            return
+        if not r:
+            self._toast(f"分组「{name}」已存在", "info")
             return
         self._rebuild_groups()
 
@@ -274,8 +306,11 @@ class MainWindow(QMainWindow):
         new = GroupDialog.get_name("重命名分组", name, self)
         if not new or new == name:
             return
-        if not self._store.rename_group(name, new):
-            QMessageBox.information(self, "提示", f"分组「{new}」已存在。")
+        r = self._persist("分组", self._store.rename_group, name, new)
+        if r is self._SAVE_FAILED:
+            return
+        if not r:
+            self._toast(f"分组「{new}」已存在", "info")
             return
         self._rebuild_groups()
 
@@ -290,7 +325,7 @@ class MainWindow(QMainWindow):
             f"确定删除分组「{name}」吗？\n（含 {count} 条脚本，将永久删除，不可恢复）",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.Yes:
-            self._store.delete_group(name)
+            self._persist("分组", self._store.delete_group, name)
             self._rebuild_groups()
 
     # ================= 脚本 =================
@@ -310,28 +345,28 @@ class MainWindow(QMainWindow):
             return
         d = dlg.data()
         if not d["name"]:
-            QMessageBox.warning(self, "提示", "脚本名称不能为空。")
+            self._toast("脚本名称不能为空", "error")
             return
         d["id"] = self._next_id()
         self._scripts.append(d)
-        self._store.save_scripts(self._current_set, self._scripts)
+        self._persist("脚本", self._store.save_scripts, self._current_set, self._scripts)
         self._load_scripts()
-        self._refresh_group_counts()
+        self._rebuild_groups()
 
     def _edit_script(self, index):
         if not (0 <= index < len(self._scripts)):
             return
         self._list.cancel_drag()
-        dlg = ScriptEditDialog(self._scripts[index], self)
+        dlg = ScriptEditDialog(self._scripts[index], "edit", self)
         if not dlg.exec():
             return
         d = dlg.data()
         if not d["name"]:
-            QMessageBox.warning(self, "提示", "脚本名称不能为空。")
+            self._toast("脚本名称不能为空", "error")
             return
         d["id"] = self._scripts[index].get("id")
         self._scripts[index] = d
-        self._store.save_scripts(self._current_set, self._scripts)
+        self._persist("脚本", self._store.save_scripts, self._current_set, self._scripts)
         self._load_scripts()
 
     def _delete_script(self, index):
@@ -343,9 +378,9 @@ class MainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.Yes:
             self._scripts.pop(index)
-            self._store.save_scripts(self._current_set, self._scripts)
+            self._persist("脚本", self._store.save_scripts, self._current_set, self._scripts)
             self._load_scripts()
-            self._refresh_group_counts()
+            self._rebuild_groups()
 
     def _move_script(self, index, delta):
         target = index + delta
@@ -353,7 +388,7 @@ class MainWindow(QMainWindow):
             return
         item = self._scripts.pop(index)
         self._scripts.insert(target, item)
-        self._store.save_scripts(self._current_set, self._scripts)
+        self._persist("脚本", self._store.save_scripts, self._current_set, self._scripts)
         self._load_scripts()
         self._list.setCurrentRow(target)
 
@@ -385,7 +420,7 @@ class MainWindow(QMainWindow):
             return
         item = self._scripts.pop(src)
         self._scripts.insert(dst, item)
-        self._store.save_scripts(self._current_set, self._scripts)
+        self._persist("脚本", self._store.save_scripts, self._current_set, self._scripts)
         self._load_scripts()
         self._list.setCurrentRow(min(dst, self._list.count() - 1))
         self._logger.info("分组 %s 排序变更: %d -> %d", self._current_set, src, dst)
@@ -403,9 +438,10 @@ class MainWindow(QMainWindow):
     # ================= 设备 =================
 
     def _on_device_changed(self, serial):
-        if self._settings.get("last_device") != serial:
+        # 无设备（serial 为空）时不覆盖上次设备记忆，重新连接后仍能自动选中
+        if serial and self._settings.get("last_device") != serial:
             self._settings["last_device"] = serial
-            self._store.save_script_set()
+            self._persist("设置", self._store.save_script_set)
         self._output.switch_to(serial)
 
     def _refresh_devices(self):
@@ -419,6 +455,10 @@ class MainWindow(QMainWindow):
     def _on_devices_ready(self, devices):
         self._device_panel.set_devices(
             devices, last_serial=self._settings.get("last_device", ""))
+        # 空列表有两种原因：确实没有设备（不打扰用户）或 adb 未安装（必须提示）
+        if not devices and not adb_available():
+            self._toast("未检测到 adb，请先安装并加入 PATH 环境变量", "error")
+            self._logger.error("设备刷新失败: 未找到可执行的 adb")
 
     # ================= 执行 =================
 
@@ -426,13 +466,16 @@ class MainWindow(QMainWindow):
         if not (0 <= index < len(self._scripts)):
             return
         script = self._scripts[index]
+        name = script.get("name", "")
         serial = self._device_panel.current_serial()
         if not serial:
-            QMessageBox.warning(self, "提示", "没有可用的在线设备。\n请连接设备后点击「刷新」。")
+            self._toast("没有可用的在线设备，请连接设备后点击「刷新」", "error")
+            self._logger.warning("执行被拒绝 [%s]: 无在线设备", name)
             return
         cmd = script.get("command", "")
         if not cmd:
-            QMessageBox.warning(self, "提示", f"脚本「{script.get('name', '')}」没有命令。")
+            self._toast(f"脚本「{name}」没有命令", "error")
+            self._logger.warning("执行被拒绝 [%s]: 命令为空", name)
             return
 
         # 同一时间只允许一个执行线程：快速连点会覆盖旧线程引用，
@@ -440,20 +483,23 @@ class MainWindow(QMainWindow):
         # thread is still running" → 进程闪退
         t = self._exec_thread
         if t is not None and t.isRunning():
+            self._toast("已有脚本正在执行，请等待完成后再运行", "info")
             self._output.append(serial, "⚠ 已有脚本正在执行，请等待完成后再运行。", "#FF9F0A")
             return
 
         # 收起日志时不自动展开：输出仍写入对应设备的 Tab，用户可自行展开查看
         self._output.ensure_tab(serial, serial)
         self._output.switch_to(serial)
-        self._output.append(serial, f"\n▶ [{script.get('name', '')}] {cmd}")
-        self._logger.info("执行 [%s] 于 %s", script.get("name", ""), serial)
+        self._output.append(serial, f"\n▶ [{name}] {cmd}")
+        self._logger.info("执行 [%s] 于 %s: %s", name, serial, cmd)
 
         # 该卡片显示旋转动画，作为执行反馈
         self._run_index = index
         self._list.set_running_row(index)
 
         self._run_serial = serial
+        self._run_name = name
+        self._run_started = time.monotonic()
         self._run_lines = []
         self._exec_thread = ExecThread(self._adb, cmd, serial)
         self._exec_thread.line_out.connect(self._on_exec_line)
@@ -473,6 +519,9 @@ class MainWindow(QMainWindow):
         color = "#FF5F57" if looks_error(line) else None
         self._output.append(self._run_serial, line, color)
         self._run_lines.append(line)
+        # 只保留末尾 400 行用于结果判定/日志摘录，防止 logcat 等长输出占用过多内存
+        if len(self._run_lines) > 400:
+            del self._run_lines[:-400]
 
     def _on_exec_finished(self, code):
         """按退出码 + 输出内容综合判断结果，避免退出码 0 但实际失败被误判成功。"""
@@ -480,12 +529,22 @@ class MainWindow(QMainWindow):
         self._run_index = -1
         self._list.set_running_row(-1)
         failed = (code != 0) or any(looks_error(l) for l in self._run_lines)
+        cost = time.monotonic() - self._run_started
         if failed:
+            err_lines = [l for l in self._run_lines if looks_error(l)][-3:]
+            tail = " | ".join(err_lines or self._run_lines[-3:]) or "-"
+            self._logger.error(
+                "脚本 [%s] 于 %s 执行失败: 退出码=%d 耗时=%.1fs 错误输出: %s",
+                self._run_name, self._run_serial, code, cost, tail)
             self._output.append(
                 self._run_serial,
                 f"  ✗ 未成功 · 退出码 {code}",
                 "#FF5F57")
+            self._toast(f"脚本「{self._run_name}」执行失败（退出码 {code}）", "error")
         else:
+            self._logger.info(
+                "脚本 [%s] 于 %s 执行成功: 退出码=%d 耗时=%.1fs",
+                self._run_name, self._run_serial, code, cost)
             self._output.append(
                 self._run_serial, f"  ✓ 成功 · 退出码 {code}", "#34C759")
 

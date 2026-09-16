@@ -29,9 +29,10 @@ DEFAULT_SETTINGS = {
 class JsonStore:
     """管理 data 目录下的 scriptSet.json 与各分组脚本文件。"""
 
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, logger=None):
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
+        self._log = logger  # 可选 logging.Logger，用于记录数据文件异常
         self._lock = threading.RLock()
         self._script_set_path = self.data_dir / "scriptSet.json"
         self._script_set = None
@@ -48,7 +49,10 @@ class JsonStore:
             if self._script_set_path.exists():
                 try:
                     data = json.loads(self._script_set_path.read_text(encoding="utf-8"))
-                except (json.JSONDecodeError, OSError):
+                except (json.JSONDecodeError, OSError) as e:
+                    if self._log:
+                        self._log.warning(
+                            "scriptSet.json 解析失败，使用默认配置: %s", e)
                     data = {}
             if not isinstance(data, dict):
                 data = {}
@@ -118,9 +122,6 @@ class JsonStore:
             return False
 
     # ---------------- 组管理 ----------------
-
-    def list_group_names(self):
-        return [s["name"] for s in self.load_script_set()["sets"]]
 
     def create_group(self, name):
         """新建分组（空脚本文件），并设为当前分组。"""
@@ -200,7 +201,10 @@ class JsonStore:
             if path.exists():
                 try:
                     data = json.loads(path.read_text(encoding="utf-8"))
-                except (json.JSONDecodeError, OSError):
+                except (json.JSONDecodeError, OSError) as e:
+                    if self._log:
+                        self._log.warning(
+                            "脚本文件 %s 解析失败，按空列表处理: %s", path.name, e)
                     data = {}
             scripts = data.get("scripts", []) if isinstance(data, dict) else []
             for i, s in enumerate(scripts):

@@ -25,12 +25,10 @@ def icon_path() -> str:
     return str(Path(__file__).resolve().parent / "icon.ico")
 
 
-def _acquire_lock() -> bool:
-    """单实例锁：重复启动时提示并退出。"""
+def _acquire_lock():
+    """单实例锁。注意：QLockFile 析构即释放锁，必须由调用方持有到进程结束。"""
     lock = QLockFile(str(LOCK_FILE))
-    if not lock.tryLock(100):
-        return False
-    return True
+    return lock if lock.tryLock(100) else None
 
 
 def main() -> int:
@@ -39,7 +37,8 @@ def main() -> int:
     app.setApplicationName("ADB 脚本工具")
     app.setWindowIcon(QIcon(icon_path()))
 
-    if not _acquire_lock():
+    lock = _acquire_lock()
+    if lock is None:
         QMessageBox.information(None, "ADB 脚本工具", "程序已在运行。")
         return 0
 

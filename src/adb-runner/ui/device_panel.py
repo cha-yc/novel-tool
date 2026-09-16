@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""设备胶囊：状态点 + 设备下拉 + 刷新。多设备连接时单选当前执行设备。"""
+"""设备胶囊：状态点 + 设备下拉 + 刷新。多设备连接时单选当前执行设备。
+
+刷新走 refresh_requested 信号由主窗口后台线程执行（adb devices 可能耗时数秒）。
+"""
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QToolButton, QWidget
 
-from core.adb import AdbService
 from ui.icons import NEUTRAL, svg_icon
 
 _DOT_ONLINE = "#34C759"
@@ -15,12 +17,12 @@ class DevicePanel(QWidget):
     """设备选择器：绿点=在线，灰点=离线；下拉单选当前执行设备。"""
 
     device_changed = Signal(str)  # 当前有效设备 serial；无在线设备时为空串
+    refresh_requested = Signal()  # 点击刷新按钮（由主窗口走后台线程，避免阻塞 UI）
 
-    def __init__(self, adb_service: AdbService, last_serial="", parent=None):
+    def __init__(self, last_serial="", parent=None):
         super().__init__(parent)
         self.setObjectName("deviceCapsule")
         self.setAttribute(Qt.WA_StyledBackground, True)  # 让 QSS 胶囊背景生效
-        self._adb = adb_service
         self._devices = []
 
         self._dot = QLabel()
@@ -34,7 +36,7 @@ class DevicePanel(QWidget):
         self.refresh_btn.setIcon(svg_icon("refresh", NEUTRAL, 20))
         self.refresh_btn.setToolTip("刷新设备")
         self.refresh_btn.setFocusPolicy(Qt.NoFocus)
-        self.refresh_btn.clicked.connect(self.refresh)
+        self.refresh_btn.clicked.connect(self.refresh_requested.emit)
 
         lay = QHBoxLayout(self)
         lay.setContentsMargins(14, 0, 6, 0)
@@ -89,9 +91,6 @@ class DevicePanel(QWidget):
             if d["serial"] == serial and d["state"] == "device":
                 return serial
         return ""
-
-    def refresh(self):
-        self.set_devices(self._adb.list_devices())
 
     def _on_index_changed(self):
         self._update_dot()

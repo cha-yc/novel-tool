@@ -141,6 +141,11 @@ QTabWidget#outputTabs QTabBar::tab {
 }
 QTabWidget#outputTabs QTabBar::tab:selected { background: #2A2A2A; color: #ECECEC; }
 QTabWidget#outputTabs QTabBar::tab:hover { color: #ECECEC; }
+/* Toast 提示胶囊 */
+QFrame#toast {
+    background-color: #2C2C2E; border: 1px solid #3A3A3C; border-radius: 16px;
+}
+QFrame#toast QLabel { color: #ECECEC; font-size: 13px; background: transparent; }
 """
 
 LIGHT = """
@@ -283,6 +288,11 @@ QTabWidget#outputTabs QTabBar::tab {
 }
 QTabWidget#outputTabs QTabBar::tab:selected { background: #E9ECEF; color: #111827; }
 QTabWidget#outputTabs QTabBar::tab:hover { color: #111827; }
+/* Toast 提示胶囊 */
+QFrame#toast {
+    background-color: #FFFFFF; border: 1px solid #E2E2E7; border-radius: 16px;
+}
+QFrame#toast QLabel { color: #111827; font-size: 13px; background: transparent; }
 """
 
 _COLORS = {

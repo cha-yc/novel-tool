@@ -3,6 +3,7 @@
 
 - 日志文件：{log_dir}/app.log，按天轮转，保留最近 keep_days 天
 - 启动时清理过期日志；单文件超过 max_mb 触发一次轮转
+- 日志目录不可写时降级为仅控制台输出，不阻断程序启动
 """
 
 import logging
@@ -26,27 +27,33 @@ class AppLogger:
         self.logger.handlers.clear()
         self.logger.propagate = False
 
-        # 控制台（开发/排错用；off 模式下不输出）
-        console = logging.StreamHandler()
-        console.setLevel(logging.INFO if mode != "off" else logging.CRITICAL)
-        self.logger.addHandler(console)
-
-        if mode in ("all", "error_only"):
-            self.log_dir.mkdir(parents=True, exist_ok=True)
-            handler = TimedRotatingFileHandler(
-                self.log_dir / "app.log",
-                when="midnight",
-                backupCount=self.keep_days,
-                encoding="utf-8",
-            )
-            handler.setLevel(logging.ERROR if mode == "error_only" else logging.DEBUG)
-            self.logger.addHandler(handler)
-
+        self._setup_handlers()
         self.cleanup()
         self.logger.info(
             "AppLogger 初始化: mode=%s keep_days=%d max_mb=%d dir=%s",
             mode, self.keep_days, self.max_mb, self.log_dir,
         )
+
+    def _setup_handlers(self):
+        """按当前 mode 重建 handlers：控制台 + 可选文件（目录不可写时降级）。"""
+        self.logger.handlers.clear()
+        # 控制台（开发/排错用；off 模式下不输出）
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO if self.mode != "off" else logging.CRITICAL)
+        self.logger.addHandler(console)
+        if self.mode in ("all", "error_only"):
+            try:
+                self.log_dir.mkdir(parents=True, exist_ok=True)
+                handler = TimedRotatingFileHandler(
+                    self.log_dir / "app.log",
+                    when="midnight",
+                    backupCount=self.keep_days,
+                    encoding="utf-8",
+                )
+                handler.setLevel(logging.ERROR if self.mode == "error_only" else logging.DEBUG)
+                self.logger.addHandler(handler)
+            except OSError as e:
+                self.logger.error("日志目录不可用(%s)，降级为仅控制台输出: %s", self.log_dir, e)
 
     def cleanup(self):
         """删除超过保留天数的日志；单文件超限触发一次轮转。"""
@@ -78,17 +85,7 @@ class AppLogger:
         if log_max_mb is not None:
             self.max_mb = max(1, int(log_max_mb))
 
-        self.logger.handlers.clear()
-        console = logging.StreamHandler()
-        console.setLevel(logging.INFO if self.mode != "off" else logging.CRITICAL)
-        self.logger.addHandler(console)
-        if self.mode in ("all", "error_only"):
-            self.log_dir.mkdir(parents=True, exist_ok=True)
-            handler = TimedRotatingFileHandler(
-                self.log_dir / "app.log", when="midnight",
-                backupCount=self.keep_days, encoding="utf-8")
-            handler.setLevel(logging.ERROR if self.mode == "error_only" else logging.DEBUG)
-            self.logger.addHandler(handler)
+        self._setup_handlers()
         self.cleanup()
         self.logger.info(
             "日志配置更新: mode=%s keep_days=%d max_mb=%d",
