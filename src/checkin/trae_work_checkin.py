@@ -18,9 +18,15 @@ Trae Work（字节，trae.cn 国内版）每日积分自动签到 · 单文件 �
   python trae_work_checkin.py import     从本机 Trae 客户端 storage.json 获取 Token（Windows）
   python trae_work_checkin.py login      浏览器授权登录（Windows 本地执行）
   python trae_work_checkin.py logout     查看 / 删除已保存凭证
+  python trae_work_checkin.py tokens     查看已保存凭证的 Token 有效期
 
 凭证：仅读取上述目录的 auth-<uid>.json。凭证不读环境变量；
      可选环境变量 RANDOM_SIGNIN / MAX_RANDOM_DELAY 控制签到前的随机延时（见下方常量区）。
+
+Token 刷新：签到前惰性检查有效期，距到期不足 24 小时（REFRESH_MARGIN）自动调
+           ExchangeToken 换新 token 并回写凭证（refresh_token 轮换覆盖保存）；
+           接口未返回有效期时兜底只写 1 小时，故通常每次签到都会换新 token。
+           每次签到结果均打印刷新后的有效期；签到时认证失败(1001)也会强制刷新重试。
 
 可选通知：脚本目录放置 notify.py（青龙面板自带）后自动发送签到结果。
 
@@ -504,15 +510,22 @@ class Trae:
     def run(self) -> dict:
         result = {"display": self.display, "uid": self.uid}
 
+        # 刷新策略：惰性触发，距到期不足 REFRESH_MARGIN(24h) 才刷新；
+        # 接口未返回有效期时兜底只写 1 小时，因此通常每次签到都会换新 token。
         if self.needs_refresh():
-            log.info("[Trae/%s] token 即将过期，尝试刷新...", self.display)
+            log.info("[Trae/%s] token %s，不足 24h，尝试刷新...",
+                     self.display, _fmt_token_exp(self.expires_at))
             if not self.refresh():
                 result["status"] = "token 失效，请重新 login"
                 result["ok"] = False
                 return result
+            result["token_refreshed"] = True
             persist_cred(uid_of(self.user_id or self.uid), self.to_cred())
         elif self.device_id:
             persist_cred(uid_of(self.user_id or self.uid), self.to_cred())
+
+        # 刷新（或未刷新）后的最新有效期，随结果一并打印/通知
+        result["token_exp"] = self.expires_at
 
         # 先查状态
         try:
@@ -873,6 +886,16 @@ def _fmt_seconds(seconds: int) -> str:
     return f"{s}秒"
 
 
+def _fmt_token_exp(expires_at: float) -> str:
+    """把到期时间戳格式化为「到期时间（剩余时长）」，签到结果与 tokens 命令共用。"""
+    if not expires_at:
+        return "未知"
+    remain = expires_at - time.time()
+    exp_s = time.strftime("%Y-%m-%d %H:%M", time.localtime(expires_at))
+    remain_s = _fmt_seconds(int(remain)) if remain > 0 else "已过期"
+    return f"{exp_s}（剩余 {remain_s}）"
+
+
 def _random_delay(label: str = "") -> None:
     """每个账号签到前独立随机延时，带倒计时打印，避免青龙面板判定任务卡死。"""
     if not RANDOM_SIGNIN or MAX_RANDOM_DELAY <= 0:
@@ -913,7 +936,12 @@ def do_checkin(quick: bool = False) -> int:
         print(f"  状态: {res['status']}")
         if res.get("credits"):
             print(f"  积分: {res['credits']}")
-        lines.append(f"[{res['display']}] {res['status']} {res.get('credits', '')}")
+        line = f"[{res['display']}] {res['status']} {res.get('credits', '')}"
+        if res.get("token_exp"):
+            tag = "（本次已自动刷新）" if res.get("token_refreshed") else ""
+            print(f"  Token 有效期: {_fmt_token_exp(res['token_exp'])}{tag}")
+            line += f" Token: {_fmt_token_exp(res['token_exp'])}{tag}"
+        lines.append(line)
         if not res["ok"]:
             all_ok = False
 
@@ -1067,6 +1095,32 @@ def do_logout() -> int:
     return 0
 
 
+def do_tokens() -> int:
+    """查看已保存凭证的 Token 有效期与剩余时长。"""
+    creds = load_creds()
+    if not creds:
+        print("⚠️  无已保存凭证")
+        return 1
+    now = time.time()
+    print("已保存凭证 Token 有效期:")
+    for i, (_src, uid, cred) in enumerate(creds, 1):
+        name = cred.get("screenName") or uid
+        exp = cred.get("expiresAt", 0)
+        if not exp:
+            print(f"  {i}. [{name}]  到期时间未知  ({cred_path(uid).name})")
+            continue
+        remain = exp - now
+        if remain <= 0:
+            state = "❌ 已过期（请重新 login / import）"
+        elif remain < REFRESH_MARGIN:
+            state = "⚠️ 即将过期（签到时会自动刷新）"
+        else:
+            state = "✅ 有效"
+        print(f"  {i}. [{name}]  {_fmt_token_exp(exp)}  {state}")
+        print(f"     文件: {cred_path(uid).name}")
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # 本地交互菜单（双击运行）
 # ---------------------------------------------------------------------------
@@ -1079,7 +1133,8 @@ def menu() -> int:
         print(" 1. 立即签到")
         print(" 2. 获取 Token（从本机 Trae 客户端导入）")
         print(" 3. 登录（浏览器授权）")
-        print(" 4. 退出登录（删除凭证）")
+        print(" 4. 查看 Token 有效期")
+        print(" 5. 退出登录（删除凭证）")
         print(" 0. 退出程序")
         try:
             choice = input("请选择: ").strip()
@@ -1093,6 +1148,8 @@ def menu() -> int:
             elif choice == "3":
                 do_login()
             elif choice == "4":
+                do_tokens()
+            elif choice == "5":
                 do_logout()
             elif choice in ("0", "q", "Q"):
                 return 0
@@ -1113,6 +1170,7 @@ def usage() -> int:
     print("  python trae_work_checkin.py import    从本机 Trae 客户端获取 Token")
     print("  python trae_work_checkin.py login     浏览器授权登录")
     print("  python trae_work_checkin.py logout    查看 / 删除凭证")
+    print("  python trae_work_checkin.py tokens    查看 Token 有效期")
     return 1
 
 
@@ -1126,6 +1184,8 @@ def main() -> int:
         return do_import()
     if cmd == "logout":
         return do_logout()
+    if cmd == "tokens":
+        return do_tokens()
     if cmd == "checkin":
         return do_checkin()
     if not cmd:
